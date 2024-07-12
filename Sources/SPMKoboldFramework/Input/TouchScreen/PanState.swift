@@ -1,5 +1,5 @@
-class KPanState {
-    var action: KPanAction
+public class KPanState {
+    public var action: KPanAction
 
     init() {
         self.action = KPanAction(
@@ -59,7 +59,7 @@ class KPanState {
     }
 }
 
-enum KPanActionState {
+public enum KPanActionState {
     case none
     case began
     case panning
@@ -77,12 +77,12 @@ enum KPanActionState {
     }
 }
 
-struct KPanAction {
-    let state: KPanActionState
-    let position: (x: Float, y: Float)
-    let startPosition: (x: Float, y: Float)
-    let relativeDiff: (x: Float, y: Float)
-    let absoluteDiff: (x: Float, y: Float)
+public struct KPanAction {
+    public let state: KPanActionState
+    public let position: (x: Float, y: Float)
+    public let startPosition: (x: Float, y: Float)
+    public let relativeDiff: (x: Float, y: Float)
+    public let absoluteDiff: (x: Float, y: Float)
 
     func nextAction() -> Self {
         switch state {

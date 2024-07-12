@@ -1,5 +1,5 @@
-class KTapState {
-    var state: KTapAction
+public class KTapState {
+    public var state: KTapAction
 
     init() {
         self.state = KTapAction(
@@ -50,7 +50,7 @@ class KTapState {
     }
 }
 
-enum KTapActionType {
+public enum KTapActionType {
     case tap
     case doubleTap
     case longPress
@@ -64,7 +64,7 @@ enum KTapActionType {
     }
 }
 
-enum KTapActionState {
+public enum KTapActionState {
     case none
     case began
     case held
@@ -83,13 +83,13 @@ enum KTapActionState {
 }
 
 
-struct KTapAction {
-    let state: KPanActionState
-    let type: KTapActionType
-    let position: (x: Float, y: Float)
-    let startPosition: (x: Float, y: Float)
-    let relativeDiff: (x: Float, y: Float)
-    let absoluteDiff: (x: Float, y: Float)
+public struct KTapAction {
+    public let state: KPanActionState
+    public let type: KTapActionType
+    public let position: (x: Float, y: Float)
+    public let startPosition: (x: Float, y: Float)
+    public let relativeDiff: (x: Float, y: Float)
+    public let absoluteDiff: (x: Float, y: Float)
 
     func nextState() -> Self {
         switch state {

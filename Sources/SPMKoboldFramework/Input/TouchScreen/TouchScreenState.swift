@@ -1,7 +1,7 @@
-class KTouchScreenState {
-    let panState: KPanState
-    let tapState: KTapState
-    
+public class KTouchScreenState {
+    public let panState: KPanState
+    public let tapState: KTapState
+
     init() {
         panState = KPanState()
         tapState = KTapState()

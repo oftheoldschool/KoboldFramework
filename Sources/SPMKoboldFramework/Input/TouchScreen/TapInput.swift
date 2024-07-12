@@ -1,17 +1,17 @@
 import Foundation
 import UIKit
 
-class KTapInput {
+public class KTapInput {
     let eventQueue: KQueue<KEvent>
 
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue
     }
-    
+
     public func registerWithView(view: UIView) {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGesture))
         view.addGestureRecognizer(tapGestureRecognizer)
-        
+
         let doubleTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(doubleTapGesture))
         doubleTapGestureRecognizer.numberOfTapsRequired = 2
         view.addGestureRecognizer(doubleTapGestureRecognizer)
@@ -19,10 +19,10 @@ class KTapInput {
         let longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressGesture))
         longPressGestureRecognizer.minimumPressDuration = 0.5
         longPressGestureRecognizer.numberOfTouchesRequired = 1
-        
+
         view.addGestureRecognizer(longPressGestureRecognizer)
     }
-    
+
     @objc public func tapGesture(gesture: UITapGestureRecognizer) {
         let pos = gesture.location(in: gesture.view).toFloatPair()
         switch gesture.state {
@@ -44,7 +44,7 @@ class KTapInput {
             break
         }
     }
-    
+
     @objc public func doubleTapGesture(gesture: UITapGestureRecognizer) {
         let pos = gesture.location(in: gesture.view).toFloatPair()
         switch gesture.state {
@@ -66,7 +66,7 @@ class KTapInput {
             break
         }
     }
-    
+
     @objc public func longPressGesture(gesture: UILongPressGestureRecognizer) {
         let pos = gesture.location(in: gesture.view).toFloatPair()
         switch gesture.state {

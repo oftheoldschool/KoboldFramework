@@ -1,10 +1,10 @@
 import UIKit
 
-class KTouchScreenInput {
-    var eventQueue: KQueue<KEvent>
+public class KTouchScreenInput {
+    private var eventQueue: KQueue<KEvent>
 
-    var panInput: KPanInput
-    var tapInput: KTapInput
+    public var panInput: KPanInput
+    public var tapInput: KTapInput
 
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue

@@ -1,18 +1,18 @@
 import Foundation
 import UIKit
 
-class KPanInput {
+public class KPanInput {
     var eventQueue: KQueue<KEvent>
-    
+
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue
     }
-    
+
     public func registerWithView(view: UIView) {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(pan))
         view.addGestureRecognizer(panGesture)
     }
-    
+
     @objc public func pan(
         gesture: UIPanGestureRecognizer
     ) {
