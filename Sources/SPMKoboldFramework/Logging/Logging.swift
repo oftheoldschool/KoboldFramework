@@ -25,7 +25,7 @@ public func kdebug(_ items: Any..., separator: String = " ", terminator: String 
 }
 
 @inlinable
-func public kinfo(_ items: Any..., separator: String = " ", terminator: String = "\n") {
+public func kinfo(_ items: Any..., separator: String = " ", terminator: String = "\n") {
     if KLogLevel.info.rawValue >= kGlobalLogLevel.rawValue {
         klog(level: "info ", items, separator: separator, terminator: terminator)
     }
