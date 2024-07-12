@@ -1,8 +1,8 @@
 import Foundation
 
 public struct KFrameData {
-    let elapsedTime: Float
-    let deltaTime: Float
+    public let elapsedTime: Float
+    public let deltaTime: Float
 }
 
 public protocol KFrameHandler: NSObjectProtocol {

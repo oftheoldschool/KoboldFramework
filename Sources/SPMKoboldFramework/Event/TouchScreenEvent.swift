@@ -1,27 +1,27 @@
-struct KPanEvent {
-    let state: KPanEventState
-    let position: (x: Float, y: Float)
+public struct KPanEvent {
+    public let state: KPanEventState
+    public let position: (x: Float, y: Float)
 }
 
-enum KPanEventState {
+public enum KPanEventState {
     case began
     case panning
     case ended
 }
 
-struct KTapEvent {
-    let state: KTapEventState
-    let type: KTapEventType
-    let position: (x: Float, y: Float)
+public struct KTapEvent {
+    public let state: KTapEventState
+    public let type: KTapEventType
+    public let position: (x: Float, y: Float)
 }
 
-enum KTapEventType {
+public enum KTapEventType {
     case tap
     case doubleTap
     case longPress
 }
 
-enum KTapEventState {
+public enum KTapEventState {
     case began
     case held
     case ended

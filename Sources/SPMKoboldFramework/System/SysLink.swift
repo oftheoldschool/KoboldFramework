@@ -9,34 +9,35 @@ public enum KInputMode {
 
 public class KSysLink: NSObject, ObservableObject {
     // MARK: - Metal Resources
-    let device: MTLDevice
-    var view: MTKView?
-    
+    public let device: MTLDevice
+    public var view: MTKView?
+
     var applicationFinishedLaunching: Bool = false
-    
+
     // MARK: - App State
     var startTime: Double = 0
     var lastUpdate: Double = 0
-    var bounds: (width: Int, height: Int)
-    var clearColor: (r: Float, g: Float, b: Float)
 
-    var inputMode: KInputMode = .none
-    var inputVisible: Bool = true
+    public var bounds: (width: Int, height: Int)
+    public var clearColor: (r: Float, g: Float, b: Float)
 
-    var touchScreenInput: KTouchScreenInput!
-    var touchScreenState: KTouchScreenState!
+    public var inputMode: KInputMode = .none
+    public var inputVisible: Bool = true
 
-    var controllerInput: KControllerInput!
-    var controllerState: KControllerState!
-    
+    public var touchScreenInput: KTouchScreenInput!
+    public var touchScreenState: KTouchScreenState!
+
+    public var controllerInput: KControllerInput!
+    public var controllerState: KControllerState!
+
     var eventQueue: KQueue<KEvent>
-    
+
     // MARK: - Per Frame Handler
     @Published
     open var frameHandler: KFrameHandler?
-    
+
     @Published
-    var frameHandlerReady: Bool = false
+    public var frameHandlerReady: Bool = false
 
     // MARK: - Init
     override init() {
