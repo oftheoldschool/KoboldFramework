@@ -185,7 +185,7 @@ public struct KControllerStateTap {
     }
 }
 
-publoc enum KControllerStateTapState {
+public enum KControllerStateTapState {
     case none
     case tapped
 
