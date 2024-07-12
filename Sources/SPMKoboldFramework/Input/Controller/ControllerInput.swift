@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-class KControllerScreenButtonGestureRecognizer : UITapGestureRecognizer, UIGestureRecognizerDelegate {
+public class KControllerScreenButtonGestureRecognizer : UITapGestureRecognizer, UIGestureRecognizerDelegate {
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
         shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
