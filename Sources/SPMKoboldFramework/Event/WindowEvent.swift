@@ -1,13 +1,13 @@
-struct KFocusEvent {
-    enum KFocusState {
+public struct KFocusEvent {
+    public enum KFocusState {
         case active
         case inactive
     }
-    
-    let state: KFocusState
+
+    public let state: KFocusState
 }
 
-struct KEventResize {
-    let width: Int
-    let height: Int
+public struct KEventResize {
+    public let width: Int
+    public let height: Int
 }

@@ -1,23 +1,23 @@
 import Foundation
 import UIKit
 
-enum KControllerEvent {
+public enum KControllerEvent {
     case screenTap(KControllerEventScreenTap)
     case button(KControllerEventButton)
     case stick(KControllerEventStick)
 }
 
-struct KControllerEventButton {
-    let button: KControllerEventButtonType
-    let state: KControllerEventButtonState
+public struct KControllerEventButton {
+    public let button: KControllerEventButtonType
+    public let state: KControllerEventButtonState
 }
 
-struct KControllerEventScreenTap {
-    let state: KControllerEventTapState
-    let position: (x: Float, y: Float)
+public struct KControllerEventScreenTap {
+    public let state: KControllerEventTapState
+    public let position: (x: Float, y: Float)
 }
 
-enum KControllerEventButtonType {
+public enum KControllerEventButtonType {
     case buttonA
     case buttonB
     case buttonX
@@ -25,29 +25,29 @@ enum KControllerEventButtonType {
     case buttonStart
 }
 
-enum KControllerEventButtonState {
+public enum KControllerEventButtonState {
     case pressed
     case released
 }
 
-enum KControllerEventTapState {
+public enum KControllerEventTapState {
     case pressed
     case released
 }
 
-enum KControllerEventStickState {
+public enum KControllerEventStickState {
     case began
     case changed
     case ended
 }
 
-enum KControllerEventStickType {
+public enum KControllerEventStickType {
     case stickLeft
     case stickRight
 }
 
-struct KControllerEventStick {
-    let stick: KControllerEventStickType
-    let state: KControllerEventStickState
-    let offset: (x: Float, y: Float)
+public struct KControllerEventStick {
+    public let stick: KControllerEventStickType
+    public let state: KControllerEventStickState
+    public let offset: (x: Float, y: Float)
 }
