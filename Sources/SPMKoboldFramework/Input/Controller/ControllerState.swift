@@ -2,17 +2,16 @@ import Foundation
 import SwiftUI
 import simd
 
-class KControllerState {
-    var screenButton: KControllerStateTap
-    // why are these different types to screen button? even if they don't need position, the approach should be uniform
-    var buttonA: KControllerStateButtonState
-    var buttonB: KControllerStateButtonState
-    var buttonX: KControllerStateButtonState
-    var buttonY: KControllerStateButtonState
-    var buttonStart: KControllerStateButtonState
-    var leftStick: KControllerStateStick
-    var rightStick: KControllerStateStick
-    
+public class KControllerState {
+    public var screenButton: KControllerStateTap
+    public var buttonA: KControllerStateButtonState
+    public var buttonB: KControllerStateButtonState
+    public var buttonX: KControllerStateButtonState
+    public var buttonY: KControllerStateButtonState
+    public var buttonStart: KControllerStateButtonState
+    public var leftStick: KControllerStateStick
+    public var rightStick: KControllerStateStick
+
     private func progressExistingStates() {
         screenButton = screenButton.nextState()
         buttonA = buttonA.nextState()
@@ -23,7 +22,7 @@ class KControllerState {
         leftStick = leftStick.nextState()
         rightStick = rightStick.nextState()
     }
-    
+
     init() {
         screenButton = KControllerStateTap(
             state: .none, 
@@ -36,10 +35,10 @@ class KControllerState {
         leftStick = KControllerStateStick(state: .none, offset: (x: .zero, y: .zero))
         rightStick = KControllerStateStick(state: .none, offset: (x: .zero, y: .zero))
     }
-    
+
     func processInputs(events: [KEvent]) {
         progressExistingStates()
-        
+
         events.forEach { event in
             if case let .input(inputEvent) = event {
                 switch inputEvent {
@@ -132,10 +131,10 @@ class KControllerState {
     }
 }
 
-struct KControllerStateStick {
-    let state: KControllerStateStickState
-    let offset: (x: Float, y: Float)
-    
+public struct KControllerStateStick {
+    public let state: KControllerStateStickState
+    public let offset: (x: Float, y: Float)
+
     func nextState() -> Self {
         switch state {
         case .ended:
@@ -146,12 +145,12 @@ struct KControllerStateStick {
     }
 }
 
-enum KControllerStateStickState {
+public enum KControllerStateStickState {
     case none
     case began
     case held
     case ended
-    
+
     func nextState() -> Self {
         switch self {
         case .began:
@@ -162,19 +161,19 @@ enum KControllerStateStickState {
             return self
         }
     }
-    
-    func isActive() -> Bool {
+
+    public func isActive() -> Bool {
         return self == .began || self == .held
     }
-    
-    func isInactive() -> Bool {
+
+    public func isInactive() -> Bool {
         return self == .ended || self == .none
     }
 }
 
-struct KControllerStateTap {
-    let state: KControllerStateTapState
-    let position: (x: Float, y: Float)
+public struct KControllerStateTap {
+    public let state: KControllerStateTapState
+    public let position: (x: Float, y: Float)
 
     func nextState() -> Self {
         switch state {
@@ -186,10 +185,10 @@ struct KControllerStateTap {
     }
 }
 
-enum KControllerStateTapState {
+publoc enum KControllerStateTapState {
     case none
     case tapped
-    
+
     func nextState() -> Self {
         switch self {
         case .tapped:
@@ -198,20 +197,20 @@ enum KControllerStateTapState {
             return self
         }
     }
-    
-    func isActive() -> Bool {
+
+    public func isActive() -> Bool {
         return self == .tapped
     }
-    
-    func isInactive() -> Bool {
+
+    public func isInactive() -> Bool {
         return self == .none
     }
 }
 
-struct KControllerStateButton {
-    let state: KControllerStateButtonState
-    let position: (x: Float, y: Float)
-    
+public struct KControllerStateButton {
+    public let state: KControllerStateButtonState
+    public let position: (x: Float, y: Float)
+
     func nextState() -> Self {
         switch state {
         case .ended:
@@ -222,12 +221,12 @@ struct KControllerStateButton {
     }
 }
 
-enum KControllerStateButtonState {
+public enum KControllerStateButtonState {
     case none
     case began
     case held
     case ended
-    
+
     func nextState() -> Self {
         switch self {
         case .began:
@@ -238,12 +237,12 @@ enum KControllerStateButtonState {
             return self
         }
     }
-    
-    func isActive() -> Bool {
+
+    public func isActive() -> Bool {
         return self == .began || self == .held
     }
-    
-    func isInactive() -> Bool {
+
+    public func isInactive() -> Bool {
         return self == .none || self == .ended
     }
 }

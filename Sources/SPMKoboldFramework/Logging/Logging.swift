@@ -59,11 +59,13 @@ public func kunimplemented() -> Never {
     kfatal("not implemented")
 }
 
-fileprivate func klog(level: String, _ items: Any..., separator: String = " ", terminator: String = "\n") {
+@inlinable
+func klog(level: String, _ items: Any..., separator: String = " ", terminator: String = "\n") {
     print([timestamp(), "[\(level)] :"] + items, separator: separator, terminator: terminator)
 }
 
-fileprivate func timestamp() -> String {
+@inlinable
+func timestamp() -> String {
     let date = Date()
     // todo: this should be constant...
     let dateFormatter = DateFormatter()
