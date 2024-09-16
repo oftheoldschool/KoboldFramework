@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct KContentView: View {
+public struct KContentView: View {
     @Environment(\.scenePhase) var scenePhase
 
     @ObservedObject
@@ -28,7 +28,7 @@ struct KContentView: View {
         self.settingsView = settingsView
     }
 
-    var body: some View {
+    public var body: some View {
         appView.edgesIgnoringSafeArea(.all)
             .statusBar(hidden: true)
             .navigationBarHidden(true)
