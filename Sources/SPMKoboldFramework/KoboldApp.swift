@@ -1,6 +1,6 @@
 import SwiftUI
 
-open class KoboldApp: NSObject, App {
+open class KoboldApp: NSObject {
     @UIApplicationDelegateAdaptor
     var sysLink: KSysLink
     private(set) public var frameHandler: KFrameHandler?
@@ -39,19 +39,19 @@ open class KoboldApp: NSObject, App {
     open func createFrameHandler(sysLink: KSysLink) -> KFrameHandler {
         return ExampleBasicFrameHandler(sysLink: sysLink)
     }
-    
+
     open func getLoadingView() -> (any View)? {
         return BasicLoadingView(
             title: appName,
             gradientColors: loadingScreenColors)
     }
-    
+
     open func getSettingsView() -> (any View)? {
         return nil
     }
 
     public var body: some Scene {
-        WindowGroup {
+        WindowGroup { [self] in
             KContentView(
                 sysLink: sysLink,
                 appName: appName,
