@@ -50,7 +50,7 @@ open class KoboldApp: NSObject {
         return nil
     }
 
-    public var body: some Scene {
+    public var windowGroup: WindowGroup<KContentView> {
         WindowGroup { [self] in
             KContentView(
                 sysLink: sysLink,
@@ -60,5 +60,9 @@ open class KoboldApp: NSObject {
                 loadingView: getLoadingView(),
                 settingsView: getSettingsView())
         }
+    }
+
+    public var body: some Scene {
+        windowGroup
     }
 }
