@@ -2,7 +2,7 @@ import SwiftUI
 
 open class KoboldApp: NSObject {
     @UIApplicationDelegateAdaptor
-    var sysLink: KSysLink
+    public var sysLink: KSysLink
     private(set) public var frameHandler: KFrameHandler?
 
     open var appName: String { "Kobold" }
