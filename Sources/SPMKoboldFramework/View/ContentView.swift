@@ -12,7 +12,7 @@ public struct KContentView: View {
     let settingsView: (any View)?
     let loadingView: (any View)?
 
-    init(
+    public init(
         sysLink: KSysLink,
         appName: String,
         showVersion: Bool = true,
