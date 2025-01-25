@@ -56,7 +56,7 @@ public class KSysLink: NSObject, ObservableObject {
         self.controllerInput = KControllerInput(eventQueue: eventQueue)
         self.controllerState = KControllerState()
     }
-    
+
     func getVersionString() -> String {
         if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
            let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
@@ -64,7 +64,7 @@ public class KSysLink: NSObject, ObservableObject {
         }
         return "(unknown build)"
     }
-    
+
     func registerFrameHandler(_ frameHandler: KFrameHandler) {
         self.frameHandler = frameHandler
         eventQueue.enqueue(
@@ -73,15 +73,15 @@ public class KSysLink: NSObject, ObservableObject {
                     width: bounds.width,
                     height: bounds.height)))
     }
-    
+
     func getMtkView() -> MTKView? {
         return self.view
     }
-    
+
     func elapsedTime() -> Float {
         return Float(CACurrentMediaTime() - startTime)
     }
-    
+
     func resetElapsedTime() {
         self.startTime = 0
         self.lastUpdate = 0
@@ -91,26 +91,26 @@ public class KSysLink: NSObject, ObservableObject {
         self.inputMode = inputMode
         refreshInputMode()
     }
-    
+
     func refreshInputMode() {
         if let mainView = view {
             kdebug("Refreshing input mode")
             for v in mainView.subviews {
                 v.removeFromSuperview()
             }
-            
+
             view!.gestureRecognizers?.forEach { recognizer in
                 recognizer.removeTarget(self, action: nil)
                 recognizer.isEnabled = false
                 mainView.removeGestureRecognizer(recognizer)
             }
-            
+
             switch inputMode {
             case .touchscreen:
                 touchScreenInput.registerWithView(view: mainView)
             case .controller:
                 controllerInput.registerWithView(
-                    view: mainView, 
+                    view: mainView,
                     visibleControls: inputVisible)
             case .none:
                 break

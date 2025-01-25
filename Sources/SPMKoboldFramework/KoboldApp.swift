@@ -2,7 +2,7 @@ import SwiftUI
 
 open class KoboldApp: NSObject {
     @UIApplicationDelegateAdaptor
-    var sysLink: KSysLink
+    public var sysLink: KSysLink
     private(set) public var frameHandler: KFrameHandler?
 
     open var appName: String { "Kobold" }
@@ -33,7 +33,9 @@ open class KoboldApp: NSObject {
 
         let handler = createFrameHandler(sysLink: sysLink)
         frameHandler = handler
-        sysLink.registerFrameHandler(handler)
+        DispatchQueue.main.async { [self] in
+            sysLink.registerFrameHandler(handler)
+        }
     }
 
     open func createFrameHandler(sysLink: KSysLink) -> KFrameHandler {
@@ -50,7 +52,7 @@ open class KoboldApp: NSObject {
         return nil
     }
 
-    public var body: some Scene {
+    open var body: some Scene {
         WindowGroup { [self] in
             KContentView(
                 sysLink: sysLink,
