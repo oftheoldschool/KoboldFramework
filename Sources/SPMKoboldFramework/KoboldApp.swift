@@ -5,7 +5,7 @@ open class KoboldApp: NSObject {
     public var sysLink: KSysLink
     private(set) public var frameHandler: KFrameHandler?
 
-    open var appName: String { "Kobold" }
+    open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { true }
     open var showSettings: Bool { false }
     open var forceLoadingTime: Int { 3 }
@@ -29,12 +29,11 @@ open class KoboldApp: NSObject {
     }
 
     open func setup() {
-        sysLink.clearColor = clearColor
+        self.sysLink.clearColor = clearColor
+        self.frameHandler = createFrameHandler(sysLink: sysLink)
 
-        let handler = createFrameHandler(sysLink: sysLink)
-        frameHandler = handler
         DispatchQueue.main.async { [self] in
-            sysLink.registerFrameHandler(handler)
+            sysLink.registerFrameHandler(self.frameHandler!)
         }
     }
 

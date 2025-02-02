@@ -43,16 +43,16 @@ class ExampleBasicShader {
             return float4((sin(uniforms.time) + 1) / 2, fIn.st.x, fIn.st.y, 1.f);
         }
     """
-    
+
     var pipeline: MTLRenderPipelineState!
-    
+
     init(
-        _ device: MTLDevice, 
+        _ device: MTLDevice,
         _ library: MTLLibrary
     ) {
         self.pipeline = Self.createPipeline(device, library)
     }
-    
+
     static func getShader(includeHeader: Bool = false) -> String {
         let header = """
             #include <metal_stdlib>
@@ -65,27 +65,27 @@ class ExampleBasicShader {
         
         """
     }
-    
+
     static func createPipeline(
         _ device: MTLDevice,
         _ library: MTLLibrary
-    ) -> MTLRenderPipelineState {            
+    ) -> MTLRenderPipelineState {
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.label = "Example Basic Pipeline"
         pipelineDescriptor.vertexFunction = library.makeFunction(name: "example_basic_shader_vertex")!
         pipelineDescriptor.fragmentFunction = library.makeFunction(name: "example_basic_shader_fragment")!
-        
+
         pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
         pipelineDescriptor.colorAttachments[0].isBlendingEnabled = true
         pipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
         pipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
         pipelineDescriptor.colorAttachments[0].sourceAlphaBlendFactor = .sourceAlpha
         pipelineDescriptor.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
-        
+
         pipelineDescriptor.depthAttachmentPixelFormat = .depth32Float
 
         var pipelineState: MTLRenderPipelineState
-        do { 
+        do {
             pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
         } catch {
             kfatal("Error creating Example Basic pipeline", error)
