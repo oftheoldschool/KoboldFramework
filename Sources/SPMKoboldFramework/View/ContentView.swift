@@ -51,31 +51,18 @@ public struct KContentView: View {
                         AnyView(loading)
                     }
                 }
-                .zIndex(10)
+                .zIndex(30)
                 .animation(
-                    .easeOut(duration: 1), 
+                    .easeOut(duration: 1),
                     value: !sysLink.frameHandlerReady)
                 .allowsHitTesting(false)
             }
-
-            KWrappedUIView {
-                let view = KMetalView(sysLink)
-                view.translatesAutoresizingMaskIntoConstraints = false
-                view.autoResizeDrawable = true
-                return view
-            }
-            .frame(
-                minWidth: 0, 
-                maxWidth: .infinity, 
-                minHeight: 0, 
-                maxHeight: .infinity)
-            .zIndex(5)
 
             VStack {
                 if showSettings, let sv = settingsView {
                     HStack {
                         KModalView(
-                            title: "Settings", 
+                            title: "Settings",
                             viewDefinition: sv)
                         Spacer()
                     }
@@ -99,6 +86,19 @@ public struct KContentView: View {
                 }
             }
             .zIndex(20)
+
+            KWrappedUIView {
+                let view = KMetalView(sysLink)
+                view.translatesAutoresizingMaskIntoConstraints = false
+                view.autoResizeDrawable = true
+                return view
+            }
+            .frame(
+                minWidth: 0,
+                maxWidth: .infinity,
+                minHeight: 0,
+                maxHeight: .infinity)
+            .zIndex(10)
         }
     }
 }
@@ -112,7 +112,7 @@ struct BackgroundClearView: UIViewRepresentable {
         }
         return view
     }
-    
+
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
 

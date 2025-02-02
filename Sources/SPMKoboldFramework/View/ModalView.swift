@@ -2,15 +2,15 @@ import SwiftUI
 
 struct KModalView: View {
     @State var presentAnotherView = false
-
+    
     let title: String
     let viewDefinition: any View
-
+    
     init(title: String, viewDefinition: any View) {
         self.title = title
         self.viewDefinition = viewDefinition
     }
-
+    
     var body: some View {
         Button(title) {
             presentAnotherView = true
