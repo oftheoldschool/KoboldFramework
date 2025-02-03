@@ -3,19 +3,19 @@ import MetalKit
 extension KSysLink: MTKViewDelegate {
     // MARK: - Post Init
     public func mtkView(
-        _ view: MTKView, 
+        _ view: MTKView,
         drawableSizeWillChange size: CGSize
     ) {
         kdebug("\(Self.description()).\(#function)")
         kdebug("KSysLink.mtkView self: \(self), view: \(view)")
 
         view.clearColor = MTLClearColor(
-            red: Double(clearColor.r), 
-            green: Double(clearColor.g), 
-            blue: Double(clearColor.b), 
+            red: Double(clearColor.r),
+            green: Double(clearColor.g),
+            blue: Double(clearColor.b),
             alpha: 1)
-        view.colorPixelFormat = .bgra8Unorm
-        view.depthStencilPixelFormat = .depth32Float
+        view.colorPixelFormat = colorPixelFormat
+        view.depthStencilPixelFormat = depthStencilPixelFormat
 
         self.view = view
         self.bounds = (width: Int(size.width), height: Int(size.height))
@@ -26,7 +26,7 @@ extension KSysLink: MTKViewDelegate {
                     width: bounds.width,
                     height: bounds.height)))
     }
-    
+
     // MARK: - Draw frame
     public func draw(in _: MTKView) {
         if !applicationFinishedLaunching {
@@ -66,7 +66,7 @@ extension KSysLink: MTKViewDelegate {
         default:
             break
         }
-        
+
         if let handler = self.frameHandler {
             handler.handleFrame(frameData: frameData)
         }

@@ -9,6 +9,8 @@ open class KoboldApp: NSObject {
     open var showVersion: Bool { true }
     open var showSettings: Bool { false }
     open var forceLoadingTime: Int { 3 }
+    open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
+    open var depthStencilPixelFormat: MTLPixelFormat { .depth32Float }
     open var clearColor: (r: Float, g: Float, b: Float) { (r: 0, g: 0, b: 0) }
     open var loadingScreenColors: [(r: Float, g: Float, b: Float)] = [
         (r: 0.5, g: 0.667, b: 1),
@@ -30,6 +32,8 @@ open class KoboldApp: NSObject {
 
     open func setup() {
         self.sysLink.clearColor = clearColor
+        self.sysLink.colorPixelFormat = colorPixelFormat
+        self.sysLink.depthStencilPixelFormat = depthStencilPixelFormat
         self.frameHandler = createFrameHandler(sysLink: sysLink)
 
         DispatchQueue.main.async { [self] in

@@ -22,6 +22,8 @@ public class KSysLink: NSObject, ObservableObject {
 
     public var bounds: (width: Int, height: Int)
     public var clearColor: (r: Float, g: Float, b: Float)
+    public var colorPixelFormat: MTLPixelFormat
+    public var depthStencilPixelFormat: MTLPixelFormat
 
     public var inputMode: KInputMode = .none
     public var inputVisible: Bool = true
@@ -50,6 +52,8 @@ public class KSysLink: NSObject, ObservableObject {
         self.eventQueue = KQueue(maxSize: 2048)
         self.bounds = (width: 0, height: 0)
         self.clearColor = (r: 0, g: 0, b: 0)
+        self.colorPixelFormat = .bgra8Unorm
+        self.depthStencilPixelFormat = .depth32Float
 
         super.init()
 
