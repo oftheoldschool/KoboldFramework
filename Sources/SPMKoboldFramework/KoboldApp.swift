@@ -12,10 +12,13 @@ open class KoboldApp: NSObject {
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
     open var depthStencilPixelFormat: MTLPixelFormat { .depth32Float }
     open var clearColor: (r: Float, g: Float, b: Float) { (r: 0, g: 0, b: 0) }
-    open var loadingScreenColors: [(r: Float, g: Float, b: Float)] = [
-        (r: 0.5, g: 0.667, b: 1),
-        (r: 0.75, g: 0.334, b: 1),
-    ]
+    open var loadingScreenColors: [(r: Float, g: Float, b: Float)] {
+        [
+            (r: 0.5, g: 0.667, b: 1),
+            (r: 0.75, g: 0.334, b: 1),
+        ]
+    }
+    open var defaultFont: Font? { nil }
 
     public override required init() {
         super.init()
@@ -63,7 +66,9 @@ open class KoboldApp: NSObject {
                 showVersion: showVersion,
                 showSettings: showSettings,
                 loadingView: getLoadingView(),
-                settingsView: getSettingsView())
+                settingsView: getSettingsView()
+            )
+            .defaultFont(font: defaultFont)
         }
     }
 }
