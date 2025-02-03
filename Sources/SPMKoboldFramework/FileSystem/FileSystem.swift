@@ -1,15 +1,15 @@
 import os
 import Foundation
 
-class KFileSystem {
-    func getDocumentsDirectory() -> URL {
+public class KFileSystem {
+    public func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(
-            for: .documentDirectory, 
+            for: .documentDirectory,
             in: .userDomainMask)
         return paths[0]
     }
-    
-    func listDocumentsDirectory() -> [String] {
+
+    public func listDocumentsDirectory() -> [String] {
         do {
             let documentsDirectory = getDocumentsDirectory()
             return try FileManager.default.subpathsOfDirectory(atPath: documentsDirectory.path())
@@ -18,8 +18,8 @@ class KFileSystem {
         }
         return []
     }
-    
-    func readFileToString(filename: String) -> String? {
+
+    public func readFileToString(filename: String) -> String? {
         do {
             let documentsDirectory = getDocumentsDirectory()
             let filePath = documentsDirectory.appendingPathComponent(filename)
@@ -29,8 +29,8 @@ class KFileSystem {
         }
         return nil
     }
-    
-    func readFileToData(filename: String) -> Data? {
+
+    public func readFileToData(filename: String) -> Data? {
         do {
             let documentsDirectory = getDocumentsDirectory()
             let filePath = documentsDirectory.appendingPathComponent(filename)
@@ -40,8 +40,8 @@ class KFileSystem {
         }
         return nil
     }
-    
-    func createFileFromString(filename: String, _ body: () -> String) {
+
+    public func createFileFromString(filename: String, _ body: () -> String) {
         do {
             let documentsDirectory = getDocumentsDirectory()
             let filePath = documentsDirectory.appendingPathComponent(filename)
@@ -51,8 +51,8 @@ class KFileSystem {
             kerror("Unable to create file from string: \(filename) - \(error.localizedDescription)")
         }
     }
-    
-    func createFileFromData(filename: String, _ body: () -> Data) {
+
+    public func createFileFromData(filename: String, _ body: () -> Data) {
         do {
             let documentsDirectory = getDocumentsDirectory()
             let filePath = documentsDirectory.appendingPathComponent(filename)
@@ -63,20 +63,20 @@ class KFileSystem {
             kerror("Unable to create file from data: \(filename) - \(error.localizedDescription)")
         }
     }
-    
-    func fileExists(filename: String) -> Bool {
+
+    public func fileExists(filename: String) -> Bool {
         let documentsDirectory = getDocumentsDirectory()
         let filePath = documentsDirectory.appendingPathComponent(filename).path(percentEncoded: false)
         return FileManager.default.fileExists(atPath: filePath)
     }
-    
-    func deleteFile(filename: String) {
+
+    public func deleteFile(filename: String) {
         let documentsDirectory = getDocumentsDirectory()
         let fileUrl = documentsDirectory.appendingPathComponent(filename)
         let filePath = fileUrl.path(percentEncoded: false)
         if FileManager.default.fileExists(atPath: filePath) && FileManager.default.isDeletableFile(atPath: filePath) {
             do {
-                try FileManager.default.removeItem(at: fileUrl)                
+                try FileManager.default.removeItem(at: fileUrl)
             } catch {
                 kerror("Unable to delete file \(filename): \(error.localizedDescription)")
             }

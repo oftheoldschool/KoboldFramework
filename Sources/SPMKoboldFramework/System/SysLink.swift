@@ -12,11 +12,13 @@ public class KSysLink: NSObject, ObservableObject {
     public let device: MTLDevice
     public var view: MTKView?
 
-    var applicationFinishedLaunching: Bool = false
+    // MARK: - System Resources
+    public let fileSystem: KFileSystem
 
     // MARK: - App State
     var startTime: Double = 0
     var lastUpdate: Double = 0
+    var applicationFinishedLaunching: Bool = false
 
     public var bounds: (width: Int, height: Int)
     public var clearColor: (r: Float, g: Float, b: Float)
@@ -41,6 +43,7 @@ public class KSysLink: NSObject, ObservableObject {
 
     // MARK: - Init
     override init() {
+        self.fileSystem = KFileSystem()
         self.device = MTLCreateSystemDefaultDevice()!
         self.inputMode = .none
         self.applicationFinishedLaunching = false
