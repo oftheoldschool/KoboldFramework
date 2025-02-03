@@ -55,6 +55,9 @@ extension KSysLink: MTKViewDelegate {
                 frameHandler?.handleResize(
                     width: Int(r.width),
                     height: Int(r.height))
+            } else if case let .focus(focusEvent) = event {
+                frameHandler?.handleFocusChange(
+                    active: focusEvent.state == .active)
             }
         }
 

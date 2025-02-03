@@ -8,4 +8,5 @@ public struct KFrameData {
 public protocol KFrameHandler: NSObjectProtocol {
     func handleFrame(frameData: KFrameData)
     func handleResize(width: Int, height: Int)
+    func handleFocusChange(active: Bool)
 }

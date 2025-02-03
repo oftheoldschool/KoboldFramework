@@ -16,4 +16,7 @@ class ExampleBasicFrameHandler: NSObject, KFrameHandler {
             width: Float(width),
             height: Float(height))
     }
+
+    func handleFocusChange(active: Bool) {
+    }
 }
