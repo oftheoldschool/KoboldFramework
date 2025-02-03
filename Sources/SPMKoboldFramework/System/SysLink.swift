@@ -64,7 +64,7 @@ public class KSysLink: NSObject, ObservableObject {
         self.controllerState = KControllerState()
     }
 
-    func getVersionString() -> String {
+    public func getVersionString() -> String {
         if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
            let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
             return "v\(appVersion) (\(buildNumber))"
@@ -72,7 +72,7 @@ public class KSysLink: NSObject, ObservableObject {
         return "(unknown build)"
     }
 
-    func registerFrameHandler(_ frameHandler: KFrameHandler) {
+    public func registerFrameHandler(_ frameHandler: KFrameHandler) {
         self.frameHandler = frameHandler
         eventQueue.enqueue(
             item: .resize(
@@ -81,15 +81,15 @@ public class KSysLink: NSObject, ObservableObject {
                     height: bounds.height)))
     }
 
-    func getMtkView() -> MTKView? {
+    public func getMtkView() -> MTKView? {
         return self.view
     }
 
-    func elapsedTime() -> Float {
+    public func elapsedTime() -> Float {
         return Float(CACurrentMediaTime() - startTime)
     }
 
-    func resetElapsedTime() {
+    public func resetElapsedTime() {
         self.startTime = 0
         self.lastUpdate = 0
     }
@@ -99,7 +99,7 @@ public class KSysLink: NSObject, ObservableObject {
         refreshInputMode()
     }
 
-    func refreshInputMode() {
+    public func refreshInputMode() {
         if let mainView = view {
             kdebug("Refreshing input mode")
             for v in mainView.subviews {
