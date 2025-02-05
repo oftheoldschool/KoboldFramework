@@ -3,10 +3,10 @@ import SwiftUI
 struct BasicLoadingView: View {
     @State
     private var isRotating = 0.0
-    
+
     private let title: String
     private let gradientColors: [Color]
-    
+
     init(
         title: String,
         gradientColors: [(r: Float, g: Float, b: Float)] = [
@@ -30,6 +30,7 @@ struct BasicLoadingView: View {
                     .font(.system(size: 48).bold().monospaced())
                     .padding(.bottom)
                     .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                    .multilineTextAlignment(.center)
                 Image(systemName: "arrow.triangle.2.circlepath.circle")
                     .font(.system(size: 60))
                     .monospaced()
