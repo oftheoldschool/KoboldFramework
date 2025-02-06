@@ -8,48 +8,48 @@ struct ExampleBasicUniforms {
 class ExampleBasicRenderer: NSObject {
     static let maxFramesInFlight: Int = 3
 
-    let sysLink: KSysLink
     let library: MTLLibrary!
 
     let commandQueue: MTLCommandQueue
     let exampleBasicShader: ExampleBasicShader
-
 
     var bounds: (width: Float, height: Float)
     let inflightSemaphore: DispatchSemaphore
 
     var currentFrame: Int
 
-    init(sysLink: KSysLink) {
-        self.sysLink = sysLink
+    init(device: MTLDevice) {
         self.currentFrame = 0
 
         self.bounds = (width: .zero, height: .zero)
-        self.commandQueue = sysLink.device.makeCommandQueue()!
+        self.commandQueue = device.makeCommandQueue()!
         self.inflightSemaphore = DispatchSemaphore(value: ExampleBasicRenderer.maxFramesInFlight)
 
         do {
-            self.library = try sysLink.device.makeLibrary(
+            self.library = try device.makeLibrary(
                 source: ExampleBasicShader.getShader(includeHeader: true),
                 options: nil)
         } catch {
             fatalError(error.localizedDescription)
         }
 
-        self.exampleBasicShader = ExampleBasicShader(sysLink.device, library)
+        self.exampleBasicShader = ExampleBasicShader(device, library)
     }
 
-    func draw(frameData: KFrameData) {
+    func draw(
+        mtkView: MTKView?,
+        elapsedTime: Float
+    ) {
         if inflightSemaphore.wait(timeout: DispatchTime.distantFuture) == .timedOut {
             fatalError("Unable to acquire semaphore for frame")
         }
 
-        guard let view = sysLink.view else {
+        guard let view = mtkView else {
             fatalError("No MTKView available")
         }
 
         var uniforms = ExampleBasicUniforms(
-            time: Float(frameData.elapsedTime),
+            time: elapsedTime,
             aspect: bounds.width / bounds.height)
 
         currentFrame = (currentFrame + 1) % Self.maxFramesInFlight

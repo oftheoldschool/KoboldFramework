@@ -1,7 +1,16 @@
 import SwiftUI
 
+public class KModalState: ObservableObject {
+    public static let shared = KModalState()
+
+    @Published
+    public var presentAnotherView = false
+
+    private init() {}
+}
+
 struct KModalView: View {
-    @State var presentAnotherView = false
+    @StateObject var modalState = KModalState.shared
 
     let title: String
     let viewDefinition: any View
@@ -13,16 +22,16 @@ struct KModalView: View {
 
     var body: some View {
         Button(title) {
-            presentAnotherView = true
+            modalState.presentAnotherView = true
         }
         .dynamicTypeSize(.large)
         .padding()
-        .sheet(isPresented: $presentAnotherView) {
+        .sheet(isPresented: $modalState.presentAnotherView) {
             VStack {
                 HStack {
                     Spacer()
                     Button("Dismiss") {
-                        presentAnotherView = false
+                        modalState.presentAnotherView = false
                     }
                     .dynamicTypeSize(.large)
                     .fixedSize()

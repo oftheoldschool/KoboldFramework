@@ -1,5 +1,4 @@
 import Dispatch
-import KoboldLogging
 
 class KQueue<T> {
     private var first: Int
@@ -79,7 +78,6 @@ class KQueue<T> {
     func enqueue(item: T) {
         semaphore.wait()
         if first == next && items[first] != nil {
-//            kwarn("warning: overwriting item in queue")
             first += 1
             if first == maxSize {
                 first = 0

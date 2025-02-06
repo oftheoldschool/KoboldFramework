@@ -1,14 +1,19 @@
 import Foundation
 
 class ExampleBasicFrameHandler: NSObject, KFrameHandler {
+    let sysLink: KSysLink
     let renderer: ExampleBasicRenderer
 
     init(sysLink: KSysLink) {
-        self.renderer = ExampleBasicRenderer(sysLink: sysLink)
+        self.sysLink = sysLink
+        self.renderer = ExampleBasicRenderer(device: sysLink.device)
     }
 
     func handleFrame(frameData: KFrameData) {
-        renderer.draw(frameData: frameData)
+        renderer.draw(
+            mtkView: sysLink.view,
+            elapsedTime: frameData.elapsedTime
+        )
     }
 
     func handleResize(width: Int, height: Int) {
