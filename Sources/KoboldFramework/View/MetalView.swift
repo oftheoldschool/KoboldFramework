@@ -1,4 +1,5 @@
 import MetalKit.MTKView
+import KoboldLogging
 
 class KMetalView: MTKView {
     init(_ sysLink: KSysLink) {

@@ -1,4 +1,5 @@
 import Dispatch
+import KoboldLogging
 
 class KQueue<T> {
     private var first: Int
@@ -6,7 +7,7 @@ class KQueue<T> {
     private let maxSize: Int
     private var items: ContiguousArray<T?>
     private let semaphore: DispatchSemaphore
-    
+
     init(maxSize: Int, defaultValue: T? = nil) {
         self.maxSize = maxSize
         self.items = ContiguousArray.init(repeating: defaultValue, count: maxSize)
@@ -14,7 +15,7 @@ class KQueue<T> {
         self.next = 0
         self.semaphore = DispatchSemaphore(value: 1)
     }
-    
+
     func capacity() -> Int {
         var capacity = 0
         if next == first && items[first] != nil {
@@ -40,12 +41,12 @@ class KQueue<T> {
         semaphore.signal()
         return item
     }
-    
+
     func dequeueAll() -> [T] {
         semaphore.wait()
         var events: [T?] = []
         if first < next {
-            events = Array(items[first..<next])            
+            events = Array(items[first..<next])
         } else if items[first] != nil {
             events = Array(items[first..<maxSize] + items[..<next])
         }
@@ -82,7 +83,7 @@ class KQueue<T> {
             first += 1
             if first == maxSize {
                 first = 0
-            }            
+            }
         }
         items[next] = item
         next += 1
