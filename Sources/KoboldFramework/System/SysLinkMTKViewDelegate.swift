@@ -1,5 +1,5 @@
 import MetalKit
-import KoboldLogging
+@_implementationOnly import KoboldLogging
 
 extension KSysLink: MTKViewDelegate {
     // MARK: - Post Init
