@@ -1,6 +1,6 @@
 import MetalKit
 import SwiftUI
-@_implementationOnly import KoboldLogging
+import KoboldLogging
 
 public enum KInputMode {
     case controller

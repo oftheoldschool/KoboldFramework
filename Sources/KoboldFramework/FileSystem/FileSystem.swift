@@ -1,6 +1,6 @@
 import os
 import Foundation
-@_implementationOnly import KoboldLogging
+import KoboldLogging
 
 public class KFileSystem {
     public func getDocumentsDirectory() -> URL {

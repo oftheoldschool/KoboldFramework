@@ -1,5 +1,5 @@
 import Metal
-@_implementationOnly import KoboldLogging
+import KoboldLogging
 
 class ExampleBasicShader {
     private static let shaderCode = """
