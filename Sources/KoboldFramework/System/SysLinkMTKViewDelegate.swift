@@ -20,7 +20,6 @@ extension KSysLink: MTKViewDelegate {
 
         self.view = view
         self.bounds = (width: Int(size.width), height: Int(size.height))
-        self.refreshInputMode()
         self.eventQueue.enqueue(
             item: .resize(
                 KEventResize(
@@ -62,11 +61,11 @@ extension KSysLink: MTKViewDelegate {
             }
         }
 
-        switch inputMode {
+        switch inputSystem.inputMode {
         case .controller:
-            controllerState.processInputs(events: events)
+            inputSystem.controllerState.processInputs(events: events)
         case .touchscreen:
-            touchScreenState.processInputs(events: events)
+            inputSystem.touchScreenState.processInputs(events: events)
         default:
             break
         }

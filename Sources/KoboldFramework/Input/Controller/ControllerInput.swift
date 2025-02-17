@@ -1,428 +1,317 @@
-import Foundation
-import SwiftUI
+import GameController
+import KoboldLogging
 
-public class KControllerScreenButtonGestureRecognizer : UITapGestureRecognizer, UIGestureRecognizerDelegate {
-    public func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        return false
-    }
+public struct KControllerType: Hashable {
+    public let id: String
+    public let description: String
+    public let isVirtual: Bool
 }
 
-public class KControllerInput {
-    var eventQueue: KQueue<KEvent>
+public class KControllerInput: ObservableObject {
+    @Published
+    public var availableControllers: [KControllerType] = []
+    @Published
+    public var activeController: KControllerType?
+    private var currentController: GCController?
+
+    private let eventQueue: KQueue<KEvent>
+
+    private var virtualController: GCVirtualController?
+    private var physicalControllers: [String: GCController] = [:]
+
+    private var controllerObservers: [Any] = []
+    private var currentHandlers: [Any] = []
+
+    private static let defaultController = KControllerType(
+        id: "Apple Touch Controller",
+        description: "Virtual Controller",
+        isVirtual: true)
 
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue
-    }
+        setupControllerMonitoring()
 
-    var stickSizePixels: Int!
-    var socketSizePixels: Int!
-
-    var leftControlStick: KUIControlStick!
-    var rightControlStick: KUIControlStick!
-
-    private func buzz() {
-        let feedbackGenerator = UIImpactFeedbackGenerator()
-        feedbackGenerator.prepare()
-        feedbackGenerator.impactOccurred(intensity: 1)
-        feedbackGenerator.prepare()
-    }
-
-    public func registerWithView(
-        view: UIView,
-        visibleControls: Bool
-    ) {
-        let boundsRect = (width: Float(view.bounds.width), height: Float(view.bounds.height))
-
-        var uiScale = 0.002 * Float(boundsRect.width)
-        if boundsRect.height > boundsRect.width {
-            uiScale *= 1.5
+        GCController.startWirelessControllerDiscovery()
+        GCController.controllers().forEach { controller in
+            let controllerId = controller.vendorName ?? "Unknown Controller"
+            physicalControllers[controllerId] = controller
+            availableControllers.append(
+                KControllerType(
+                    id: controllerId,
+                    description: controller.description,
+                    isVirtual: false))
         }
 
-        let lineAlpha = visibleControls ? 0.2 : 0
-        let fillAlpha = visibleControls ? 0.1 : 0
-
-        let padding: Float = 20
-        let buttonSizePixels: Float = 25
-        let startButtonSizePixels: Float = 30
-        stickSizePixels = 40
-        socketSizePixels = 60
-
-        let leftStickPosition = (
-            x: Int(padding * 2.5 * uiScale),
-            y: Int(boundsRect.height - (Float(stickSizePixels) + padding * 2) * uiScale))
-        leftControlStick = KUIControlStick(
-            position: leftStickPosition,
-            stickRadiusInPixels: Int(Float(stickSizePixels) * uiScale),
-            socketRadiusInPixels: Int(Float(socketSizePixels) * uiScale),
-            strokeColor: .init(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-        view.addSubview(leftControlStick)
-
-        let rightStickPosition = (
-            x: Int(boundsRect.width - (Float(stickSizePixels) + padding * 2.5) * uiScale),
-            y: Int(boundsRect.height - (Float(stickSizePixels) + padding * 2) * uiScale))
-
-        rightControlStick = KUIControlStick(
-            position: rightStickPosition,
-            stickRadiusInPixels: Int(Float(stickSizePixels) * uiScale),
-            socketRadiusInPixels: Int(Float(socketSizePixels) * uiScale),
-            strokeColor: UIColor(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-
-        view.addSubview(rightControlStick)
-
-        let buttonAView = KUICircle(
-            position: (
-                x: Int(boundsRect.width - (Float(buttonSizePixels * 2) + padding * 2) * uiScale),
-                y: Int(boundsRect.height - (Float(buttonSizePixels * 2) + padding * 3.5) * uiScale)),
-            radiusInPixels: Int(Float(buttonSizePixels) * uiScale),
-            strokeColor: UIColor(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-
-        view.addSubview(buttonAView)
-
-        let buttonBView = KUICircle(
-            position: (
-                x: Int(boundsRect.width - (Float(buttonSizePixels * 2) + padding * 0.25) * uiScale),
-                y: Int(boundsRect.height - (Float(buttonSizePixels * 2) + padding * 4.25) * uiScale)),
-            radiusInPixels: Int(Float(buttonSizePixels) * uiScale),
-            strokeColor: UIColor(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-
-        view.addSubview(buttonBView)
-
-        let buttonXView = KUICircle(
-            position: (
-                x: Int(boundsRect.width - (Float(buttonSizePixels * 2) + padding * 2.75) * uiScale),
-                y: Int(boundsRect.height - (Float(buttonSizePixels * 2) + padding * 5.25) * uiScale)),
-            radiusInPixels: Int(Float(buttonSizePixels) * uiScale),
-            strokeColor: UIColor(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-        view.addSubview(buttonXView)
-
-        let buttonYView = KUICircle(
-            position: (
-                x: Int(boundsRect.width - (Float(buttonSizePixels * 2) + padding * 1) * uiScale),
-                y: Int(boundsRect.height - (Float(buttonSizePixels * 2) + padding * 6) * uiScale)),
-            radiusInPixels: Int(Float(buttonSizePixels) * uiScale),
-            strokeColor: UIColor(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-        view.addSubview(buttonYView)
-
-        let horizontalAdjustment = (Float(socketSizePixels) - Float(startButtonSizePixels)) * 0.5
-        let buttonStartView = KUIRectangle(
-            position: (
-                x: Int(padding * 2.5 * uiScale + horizontalAdjustment * uiScale),
-                y: Int(boundsRect.height - (Float(buttonSizePixels * 2) + padding * 4.25) * uiScale)),
-            widthInPixels: Int(Float(startButtonSizePixels) * uiScale),
-            heightInpixels: Int(Float(startButtonSizePixels) * uiScale * 0.4),
-            strokeColor: UIColor(white: 1, alpha: lineAlpha),
-            strokeWidth: 4,
-            fillColor: UIColor(white: 1, alpha: fillAlpha))
-        view.addSubview(buttonStartView)
-
-        // this is taking priority over the sticks: https://developer.apple.com/documentation/uikit/touches_presses_and_gestures/coordinating_multiple_gesture_recognizers/preferring_one_gesture_over_another
-        let screenButtonGesture = KControllerScreenButtonGestureRecognizer(target: self, action: #selector(screenButton))
-        screenButtonGesture.delegate = screenButtonGesture
-        screenButtonGesture.numberOfTouchesRequired = 1
-        screenButtonGesture.name = "Screen Button Gesture Recognizer"
-        view.addGestureRecognizer(screenButtonGesture)
-
-        let buttonStartGesture = UITapGestureRecognizer(target: self, action: #selector(buttonStart))
-        buttonStartGesture.numberOfTouchesRequired = 1
-        buttonStartGesture.name = "Button Start Gesture Recognizer"
-        buttonStartView.addGestureRecognizer(buttonStartGesture)
-
-        let leftControlStickPan = UIPanGestureRecognizer(target: self, action: #selector(leftControlStickPan))
-        leftControlStickPan.minimumNumberOfTouches = 1
-        leftControlStickPan.name = "Left Stick Gesture Recognizer"
-        leftControlStick.addGestureRecognizer(leftControlStickPan)
-
-        let rightControlStickPan = UIPanGestureRecognizer(target: self, action: #selector(rightControlStickPan))
-        rightControlStickPan.minimumNumberOfTouches = 1
-        rightControlStickPan.name = "Right Stick Gesture Recognizer"
-        rightControlStick.addGestureRecognizer(rightControlStickPan)
-
-        let buttonAGesture = UILongPressGestureRecognizer(target: self, action: #selector(buttonA))
-        buttonAGesture.minimumPressDuration = 0.01
-        buttonAGesture.numberOfTouchesRequired = 1
-        buttonAGesture.name = "Button A Gesture Recognizer"
-        buttonAView.addGestureRecognizer(buttonAGesture)
-
-        let buttonBGesture = UILongPressGestureRecognizer(target: self, action: #selector(buttonB))
-        buttonBGesture.minimumPressDuration = 0.01
-        buttonBGesture.numberOfTouchesRequired = 1
-        buttonBGesture.name = "Button B Gesture Recognizer"
-        buttonBView.addGestureRecognizer(buttonBGesture)
-
-        let buttonXGesture = UILongPressGestureRecognizer(target: self, action: #selector(buttonX))
-        buttonXGesture.minimumPressDuration = 0.01
-        buttonXGesture.numberOfTouchesRequired = 1
-        buttonXGesture.name = "Button X Gesture Recognizer"
-        buttonXView.addGestureRecognizer(buttonXGesture)
-
-        let buttonYGesture = UILongPressGestureRecognizer(target: self, action: #selector(buttonY))
-        buttonYGesture.minimumPressDuration = 0.01
-        buttonYGesture.numberOfTouchesRequired = 1
-        buttonYGesture.name = "Button Y Gesture Recognizer"
-        buttonYView.addGestureRecognizer(buttonYGesture)
+        availableControllers.append(Self.defaultController)
     }
 
-    @objc public func screenButton(gesture: KControllerScreenButtonGestureRecognizer) {
-        let rawPosition = gesture.location(in: gesture.view)
+    deinit {
+        disableController()
+    }
 
-        switch gesture.state {
-        case .ended:
-            buzz()
+    public func isControllerActive(_ type: KControllerType) -> Bool {
+        activeController == type
+    }
 
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .screenTap(
-                        KControllerEventScreenTap(
-                            state: .pressed,
-                            position: rawPosition.toFloatPair())))))
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .screenTap(
-                        KControllerEventScreenTap(
-                            state: .released,
-                            position: rawPosition.toFloatPair())))))
-        default:
-            break
+    public func enableDefaultController() {
+        enableController(Self.defaultController)
+    }
+
+    public func enableController(_ type: KControllerType) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            if let currentController = self.currentController {
+                self.removeControllerHandlers(currentController)
+            }
+            self.cleanupVirtualControllerView()
+            self.deactivatePhysicalController()
+
+            if type.id == "Apple Touch Controller" {
+                let configuration = GCVirtualController.Configuration()
+                configuration.elements = [
+                    GCInputLeftThumbstick,
+                    GCInputRightThumbstick,
+                    GCInputButtonA,
+                    GCInputButtonB,
+                    GCInputButtonX,
+                    GCInputButtonY,
+                ]
+
+                virtualController = GCVirtualController(configuration: configuration)
+                virtualController?.connect { [weak self] error in
+                    guard let self = self else { return }
+
+                    if let error = error {
+                        kerror("Failed to connect virtual controller: \(error.localizedDescription)")
+                        return
+                    }
+
+                    if let controller = self.virtualController?.controller {
+                        self.activatePhysicalController(controller, type: type)
+                    }
+                }
+            } else if let controller = self.physicalControllers[type.id] {
+                self.activatePhysicalController(controller, type: type)
+            }
+        }
+        self.objectWillChange.send()
+    }
+
+    private func cleanupVirtualControllerView() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            func removeControllerView(from view: UIView) {
+                if String(describing: type(of: view)) == "GCControllerView" {
+                    view.removeFromSuperview()
+                    return
+                }
+                for subview in view.subviews {
+                    removeControllerView(from: subview)
+                }
+            }
+            removeControllerView(from: window)
         }
     }
 
-    @objc public func buttonA(gesture: UILongPressGestureRecognizer) {
-        switch gesture.state {
-        case .began:
-            buzz()
+    public func disableController() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.deactivatePhysicalController()
+        }
+        self.objectWillChange.send()
+    }
 
-            eventQueue.enqueue(item: .input(
-                        .controller(
-                            .button(
-                                KControllerEventButton(
-                                    button: .buttonA,
-                                    state: .pressed)))))
-        case .ended:
-            eventQueue.enqueue(item: .input(
-                        .controller(
-                            .button(
-                                KControllerEventButton(
-                                    button: .buttonA,
-                                    state: .released)))))
-        default:
-            break
+    private func setupControllerMonitoring() {
+        let connectObserver = NotificationCenter.default.addObserver(
+            forName: .GCControllerDidConnect,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self = self,
+                  let controller = notification.object as? GCController
+            else { return }
+
+            let controllerId = controller.vendorName ?? "Unknown Controller"
+
+            if controllerId != "Apple Touch Controller" {
+                let type = KControllerType(
+                    id: controllerId,
+                    description: controllerId,
+                    isVirtual: false)
+                self.physicalControllers[controllerId] = controller
+                if !self.availableControllers.contains(type) {
+                    self.availableControllers.append(type)
+                }
+            }
+        }
+
+        let disconnectObserver = NotificationCenter.default.addObserver(
+            forName: .GCControllerDidDisconnect,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self = self,
+                  let controller = notification.object as? GCController
+            else { return }
+
+            let controllerId = controller.vendorName ?? controller.productCategory
+            let type = KControllerType(
+                id: controllerId,
+                description: controllerId,
+                isVirtual: controllerId == "Apple Touch Controller")
+
+            if controllerId != "Apple Touch Controller" {
+                self.physicalControllers.removeValue(forKey: controllerId)
+                self.availableControllers.removeAll(where: { $0 == type })
+            }
+
+            if type == self.activeController {
+                self.deactivatePhysicalController()
+            }
+        }
+
+        controllerObservers.append(connectObserver)
+        controllerObservers.append(disconnectObserver)
+    }
+
+    private func activatePhysicalController(_ controller: GCController, type: KControllerType) {
+        currentController = controller
+        activeController = type
+        setupControllerHandlers(controller)
+
+        let connectedEvent = KPeripheralConnectedEvent(peripheralType: .physicalController)
+        eventQueue.enqueue(item: .peripheral(.connected(connectedEvent)))
+    }
+
+    private func deactivatePhysicalController() {
+        if activeController != nil {
+            if let controller = currentController,
+               let controllerId = controller.vendorName
+            {
+                removeControllerHandlers(controller)
+                if controllerId == "Apple Touch Controller" {
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first {
+                        func removeControllerView(from view: UIView) {
+                            if String(describing: type(of: view)) == "GCControllerView" {
+                                view.removeFromSuperview()
+                                return
+                            }
+                            for subview in view.subviews {
+                                removeControllerView(from: subview)
+                            }
+                        }
+                        removeControllerView(from: window)
+                    }
+                    virtualController?.disconnect()
+                    virtualController = nil
+                }
+            }
+
+            activeController = nil
+            currentController = nil
+
+            let disconnectedEvent = KPeripheralDisconnectedEvent(peripheralType: .physicalController)
+            eventQueue.enqueue(item: .peripheral(.disconnected(disconnectedEvent)))
         }
     }
 
-    @objc public func buttonB(gesture: UILongPressGestureRecognizer) {
-        switch gesture.state {
-        case .began:
-            buzz()
+    private func setupControllerHandlers(_ controller: GCController) {
+        guard let gamepad = controller.extendedGamepad else {
+            kerror("Extended gamepad not available")
+            return
+        }
 
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonB,
-                            state: .pressed)))))
-        case .ended:
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonB,
-                            state: .released)))))
-        default:
-            break
+        gamepad.buttonA.valueChangedHandler = { [weak self] button, value, pressed in
+            let event = KEvent.input(.controller(.button(KControllerEventButton(
+                button: .buttonA,
+                state: pressed ? .pressed : .released
+            ))))
+            self?.eventQueue.enqueue(item: event)
+        }
+
+        gamepad.buttonB.valueChangedHandler = { [weak self] button, value, pressed in
+            let event = KEvent.input(.controller(.button(KControllerEventButton(
+                button: .buttonB,
+                state: pressed ? .pressed : .released
+            ))))
+            self?.eventQueue.enqueue(item: event)
+        }
+
+        gamepad.buttonX.valueChangedHandler = { [weak self] button, value, pressed in
+            let event = KEvent.input(.controller(.button(KControllerEventButton(
+                button: .buttonX,
+                state: pressed ? .pressed : .released
+            ))))
+            self?.eventQueue.enqueue(item: event)
+        }
+
+        gamepad.buttonY.valueChangedHandler = { [weak self] button, value, pressed in
+            let event = KEvent.input(.controller(.button(KControllerEventButton(
+                button: .buttonY,
+                state: pressed ? .pressed : .released
+            ))))
+            self?.eventQueue.enqueue(item: event)
+        }
+
+        var leftStickActive = false
+        var rightStickActive = false
+
+        gamepad.leftThumbstick.valueChangedHandler = { [weak self] stick, xValue, yValue in
+            guard let self = self else { return }
+
+            let state: KControllerEventStickState
+            if !leftStickActive && (xValue != 0 || yValue != 0) {
+                state = .began
+                leftStickActive = true
+            } else if leftStickActive && xValue == 0 && yValue == 0 {
+                state = .ended
+                leftStickActive = false
+            } else {
+                state = .changed
+            }
+
+            let event = KEvent.input(.controller(.stick(KControllerEventStick(
+                stick: .stickLeft,
+                state: state,
+                offset: (x: xValue, y: yValue)
+            ))))
+            self.eventQueue.enqueue(item: event)
+        }
+
+        gamepad.rightThumbstick.valueChangedHandler = { [weak self] stick, xValue, yValue in
+            guard let self = self else { return }
+
+            let state: KControllerEventStickState
+            if !rightStickActive && (xValue != 0 || yValue != 0) {
+                state = .began
+                rightStickActive = true
+            } else if rightStickActive && xValue == 0 && yValue == 0 {
+                state = .ended
+                rightStickActive = false
+            } else {
+                state = .changed
+            }
+
+            let event = KEvent.input(.controller(.stick(KControllerEventStick(
+                stick: .stickRight,
+                state: state,
+                offset: (x: xValue, y: yValue)
+            ))))
+            self.eventQueue.enqueue(item: event)
         }
     }
 
-    @objc public func buttonX(gesture: UILongPressGestureRecognizer) {
-        switch gesture.state {
-        case .began:
-            buzz()
+    private func removeControllerHandlers(_ controller: GCController) {
+        guard let gamepad = controller.extendedGamepad else { return }
 
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonX,
-                            state: .pressed)))))
-        case .ended:
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonX,
-                            state: .released)))))
-        default:
-            break
-        }
-    }
+        gamepad.buttonA.valueChangedHandler = nil
+        gamepad.buttonB.valueChangedHandler = nil
+        gamepad.buttonX.valueChangedHandler = nil
+        gamepad.buttonY.valueChangedHandler = nil
 
-    @objc public func buttonY(gesture: UILongPressGestureRecognizer) {
-        switch gesture.state {
-        case .began:
-            buzz()
-
-            eventQueue.enqueue(item: .input(
-                .controller(.button(
-                    KControllerEventButton(
-                        button: .buttonY,
-                        state: .pressed)))))
-        case .ended:
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonY,
-                            state: .released)))))
-        default:
-            break
-        }
-    }
-
-    @objc public func buttonStart(gesture: UITapGestureRecognizer) {
-        switch gesture.state {
-        case .ended:
-            buzz()
-
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonStart,
-                            state: .pressed)))))
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .button(
-                        KControllerEventButton(
-                            button: .buttonStart,
-                            state: .released)))))
-        default:
-            break
-        }
-    }
-
-    @objc
-    func leftControlStickPan(gesture: UIPanGestureRecognizer) {
-        var touchPosition = gesture.translation(in: gesture.view)
-        let distFromBase = sqrt(
-            pow(Float(touchPosition.x), 2) +
-            pow(Float(touchPosition.y), 2))
-
-        let maxOffset = CGFloat(stickSizePixels) * 0.6
-        if distFromBase > 0 {
-            let scale = CGFloat(distFromBase) >= maxOffset ? maxOffset / CGFloat(distFromBase) : 1
-            touchPosition.x *= scale
-            touchPosition.y *= scale
-        }
-
-        let scaledTouchPosition = CGPoint(
-            x: touchPosition.x / maxOffset,
-            y: touchPosition.y / maxOffset).toFloatPair()
-
-        let stickView = leftControlStick.stickView!
-        switch gesture.state {
-        case .began:
-            stickView.frame.origin.x = CGFloat(leftControlStick.stickBasePos.x) + touchPosition.x
-            stickView.frame.origin.y = CGFloat(leftControlStick.stickBasePos.y) + touchPosition.y
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .stick(
-                        KControllerEventStick(
-                            stick: .stickLeft,
-                            state: .began,
-                            offset: scaledTouchPosition)))))
-        case .changed:
-            stickView.frame.origin.x = CGFloat(leftControlStick.stickBasePos.x) + touchPosition.x
-            stickView.frame.origin.y = CGFloat(leftControlStick.stickBasePos.y) + touchPosition.y
-            eventQueue.enqueue(item:
-                    .input(
-                        .controller(
-                            .stick(
-                                KControllerEventStick(
-                                    stick: .stickLeft,
-                                    state: .changed,
-                                    offset: scaledTouchPosition)))))
-        case .ended, .cancelled, .failed:
-            stickView.frame.origin.x = CGFloat(leftControlStick.stickBasePos.x)
-            stickView.frame.origin.y = CGFloat(leftControlStick.stickBasePos.y)
-            eventQueue.enqueue(item:
-                    .input(
-                        .controller(
-                            .stick(
-                                KControllerEventStick(
-                                    stick: .stickLeft,
-                                    state: .ended,
-                                    offset: scaledTouchPosition)))))
-        default:
-            break
-        }
-    }
-
-    @objc
-    func rightControlStickPan(gesture: UIPanGestureRecognizer) {
-        var touchPosition = gesture.translation(in: gesture.view)
-        let distFromBase = sqrt(
-            pow(Float(touchPosition.x), 2) +
-            pow(Float(touchPosition.y), 2))
-
-        let maxOffset = CGFloat(stickSizePixels) * 0.6
-        if distFromBase > 0 {
-            let scale = CGFloat(distFromBase) >= maxOffset ? maxOffset / CGFloat(distFromBase) : 1
-            touchPosition.x *= scale
-            touchPosition.y *= scale
-        }
-
-        let scaledTouchPosition = CGPoint(
-            x: touchPosition.x / maxOffset,
-            y: touchPosition.y / maxOffset).toFloatPair()
-
-        let stickView = rightControlStick.stickView!
-        switch gesture.state {
-        case .began:
-            stickView.frame.origin.x = CGFloat(rightControlStick.stickBasePos.x) + touchPosition.x
-            stickView.frame.origin.y = CGFloat(rightControlStick.stickBasePos.y) + touchPosition.y
-            eventQueue.enqueue(item:  .input(
-                .controller(
-                    .stick(
-                        KControllerEventStick(
-                            stick: .stickRight,
-                            state: .began,
-                            offset: scaledTouchPosition)))))
-        case .changed:
-            stickView.frame.origin.x = CGFloat(rightControlStick.stickBasePos.x) + touchPosition.x
-            stickView.frame.origin.y = CGFloat(rightControlStick.stickBasePos.y) + touchPosition.y
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .stick(
-                        KControllerEventStick(
-                            stick: .stickRight,
-                            state: .changed,
-                            offset: scaledTouchPosition)))))
-        case .ended, .cancelled, .failed:
-            stickView.frame.origin.x = CGFloat(rightControlStick.stickBasePos.x)
-            stickView.frame.origin.y = CGFloat(rightControlStick.stickBasePos.y)
-            eventQueue.enqueue(item: .input(
-                .controller(
-                    .stick(
-                        KControllerEventStick(
-                            stick: .stickRight,
-                            state: .ended,
-                            offset: scaledTouchPosition)))))
-        default:
-            break
-        }
+        gamepad.leftThumbstick.valueChangedHandler = nil
+        gamepad.rightThumbstick.valueChangedHandler = nil
     }
 }

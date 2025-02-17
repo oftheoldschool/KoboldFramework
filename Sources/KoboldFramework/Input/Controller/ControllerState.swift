@@ -25,7 +25,7 @@ public class KControllerState {
 
     init() {
         screenButton = KControllerStateTap(
-            state: .none, 
+            state: .none,
             position: (.zero, .zero))
         buttonA = .none
         buttonB = .none

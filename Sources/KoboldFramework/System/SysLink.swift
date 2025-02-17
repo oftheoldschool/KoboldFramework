@@ -1,12 +1,4 @@
 import MetalKit
-import SwiftUI
-import KoboldLogging
-
-public enum KInputMode {
-    case controller
-    case touchscreen
-    case none
-}
 
 public class KSysLink: NSObject, ObservableObject {
     // MARK: - Metal Resources
@@ -15,6 +7,9 @@ public class KSysLink: NSObject, ObservableObject {
 
     // MARK: - System Resources
     public let fileSystem: KFileSystem
+
+    @Published
+    public var inputSystem: KInputSystem
 
     // MARK: - App State
     var startTime: Double = 0
@@ -25,15 +20,6 @@ public class KSysLink: NSObject, ObservableObject {
     public var clearColor: (r: Float, g: Float, b: Float)
     public var colorPixelFormat: MTLPixelFormat
     public var depthStencilPixelFormat: MTLPixelFormat
-
-    public var inputMode: KInputMode = .none
-    public var inputVisible: Bool = true
-
-    public var touchScreenInput: KTouchScreenInput!
-    public var touchScreenState: KTouchScreenState!
-
-    public var controllerInput: KControllerInput!
-    public var controllerState: KControllerState!
 
     var eventQueue: KQueue<KEvent>
 
@@ -46,23 +32,17 @@ public class KSysLink: NSObject, ObservableObject {
 
     // MARK: - Init
     override init() {
+        let eventQueue = KQueue<KEvent>(maxSize: 2048)
         self.fileSystem = KFileSystem()
+        self.inputSystem = KInputSystem(eventQueue)
         self.device = MTLCreateSystemDefaultDevice()!
-        self.inputMode = .none
-        self.applicationFinishedLaunching = false
-        self.eventQueue = KQueue(maxSize: 2048)
+        self.eventQueue = eventQueue
         self.bounds = (width: 0, height: 0)
         self.clearColor = (r: 0, g: 0, b: 0)
         self.colorPixelFormat = .bgra8Unorm
         self.depthStencilPixelFormat = .depth32Float
 
         super.init()
-
-        self.touchScreenInput = KTouchScreenInput(eventQueue: eventQueue)
-        self.touchScreenState = KTouchScreenState()
-
-        self.controllerInput = KControllerInput(eventQueue: eventQueue)
-        self.controllerState = KControllerState()
     }
 
     public func getVersionString() -> String {
@@ -93,36 +73,5 @@ public class KSysLink: NSObject, ObservableObject {
     public func resetElapsedTime() {
         self.startTime = 0
         self.lastUpdate = 0
-    }
-
-    public func setInputMode(_ inputMode: KInputMode) {
-        self.inputMode = inputMode
-        refreshInputMode()
-    }
-
-    public func refreshInputMode() {
-        if let mainView = view {
-            kdebug("Refreshing input mode")
-            for v in mainView.subviews {
-                v.removeFromSuperview()
-            }
-
-            view!.gestureRecognizers?.forEach { recognizer in
-                recognizer.removeTarget(self, action: nil)
-                recognizer.isEnabled = false
-                mainView.removeGestureRecognizer(recognizer)
-            }
-
-            switch inputMode {
-            case .touchscreen:
-                touchScreenInput.registerWithView(view: mainView)
-            case .controller:
-                controllerInput.registerWithView(
-                    view: mainView,
-                    visibleControls: inputVisible)
-            case .none:
-                break
-            }
-        }
     }
 }

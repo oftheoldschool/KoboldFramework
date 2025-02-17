@@ -30,6 +30,7 @@ open class KoboldApp: NSObject {
             DispatchQueue.main.async { [self] in
                 self.sysLink.frameHandlerReady = true
             }
+            postSetup()
         }
     }
 
@@ -42,6 +43,9 @@ open class KoboldApp: NSObject {
         DispatchQueue.main.async { [self] in
             sysLink.registerFrameHandler(self.frameHandler!)
         }
+    }
+
+    open func postSetup() {
     }
 
     open func createFrameHandler(sysLink: KSysLink) -> KFrameHandler {

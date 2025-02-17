@@ -4,6 +4,7 @@ public enum KEvent {
     case resize(KEventResize)
     case input(KInputEvent)
     case focus(KFocusEvent)
+    case peripheral(KPeripheralEvent)
 }
 
 public enum KInputEvent {
@@ -11,3 +12,4 @@ public enum KInputEvent {
     case pan(KPanEvent)
     case tap(KTapEvent)
 }
+
