@@ -34,12 +34,16 @@ public class KInputSystem: ObservableObject {
     public func setInputMode(_ inputMode: KInputMode) {
         if self.inputMode == .controller {
             controllerInput.disableController()
+        } else if self.inputMode == .touchscreen {
+            touchScreenInput.disableTouchInput()
+        }
+
+        if inputMode == .controller {
+            controllerInput.enableDefaultController()
+        } else if inputMode == .touchscreen {
             touchScreenInput.enableTouchInput()
         }
-        if inputMode == .controller {
-            touchScreenInput.disableTouchInput()
-            controllerInput.enableDefaultController()
-        }
+
         self.inputMode = inputMode
         self.objectWillChange.send()
     }
