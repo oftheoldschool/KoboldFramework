@@ -19,6 +19,7 @@ open class KoboldApp: NSObject {
         ]
     }
     open var defaultFont: Font? { nil }
+    open var colorScheme: ColorScheme? { nil }
 
     public override required init() {
         super.init()
@@ -73,6 +74,7 @@ open class KoboldApp: NSObject {
                 settingsView: getSettingsView()
             )
             .defaultFont(font: defaultFont)
+            .overrideColorScheme(colorScheme: colorScheme)
         }
     }
 }
