@@ -3,6 +3,7 @@ import SwiftUI
 public enum KInputMode {
     case controller
     case touchscreen
+    case hybrid
     case none
 }
 
@@ -34,16 +35,30 @@ public class KInputSystem: ObservableObject {
     public func setInputMode(_ inputMode: KInputMode) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            if self.inputMode == .controller {
+            let previousInputMode = self.inputMode
+
+            switch previousInputMode {
+            case .controller:
                 controllerInput.disableController()
-            } else if self.inputMode == .touchscreen {
+            case .touchscreen:
                 touchScreenInput.disableTouchInput()
+            case .hybrid:
+                controllerInput.disableController()
+                touchScreenInput.disableTouchInput()
+            case .none:
+                break
             }
 
-            if inputMode == .controller {
+            switch inputMode {
+            case .controller:
                 controllerInput.enableDefaultController()
-            } else if inputMode == .touchscreen {
+            case .touchscreen:
                 touchScreenInput.enableTouchInput()
+            case .hybrid:
+                touchScreenInput.enableTouchInput()
+                controllerInput.enableDefaultController()
+            case .none:
+                break
             }
             self.inputMode = inputMode
         }

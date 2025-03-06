@@ -66,6 +66,9 @@ extension KSysLink: MTKViewDelegate {
             inputSystem.controllerState.processInputs(events: events)
         case .touchscreen:
             inputSystem.touchScreenState.processInputs(events: events)
+        case .hybrid:
+            inputSystem.controllerState.processInputs(events: events)
+            inputSystem.touchScreenState.processInputs(events: events)
         default:
             break
         }
