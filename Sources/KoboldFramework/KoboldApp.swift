@@ -8,6 +8,7 @@ open class KoboldApp: NSObject {
     open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { true }
     open var showSettings: Bool { false }
+    open var settingsStyle: KModalStyle { .large }
     open var forceLoadingTime: Int { 3 }
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
     open var depthStencilPixelFormat: MTLPixelFormat { .depth32Float }
@@ -70,6 +71,7 @@ open class KoboldApp: NSObject {
                 appName: appName,
                 showVersion: showVersion,
                 showSettings: showSettings,
+                settingsStyle: settingsStyle,
                 loadingView: getLoadingView(),
                 settingsView: getSettingsView()
             )

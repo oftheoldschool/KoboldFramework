@@ -10,6 +10,7 @@ public struct KContentView: View {
     let showVersion: Bool
     let showSettings: Bool
     let settingsView: (any View)?
+    let settingsStyle: KModalStyle
     let loadingView: (any View)?
 
     public init(
@@ -17,6 +18,7 @@ public struct KContentView: View {
         appName: String,
         showVersion: Bool = true,
         showSettings: Bool = false,
+        settingsStyle: KModalStyle,
         loadingView: (any View)? = nil,
         settingsView: (any View)? = nil
     ) {
@@ -24,8 +26,9 @@ public struct KContentView: View {
         self.sysLink = sysLink
         self.showVersion = showVersion
         self.showSettings = showSettings
-        self.loadingView = loadingView
         self.settingsView = settingsView
+        self.settingsStyle = settingsStyle
+        self.loadingView = loadingView
     }
 
     public var body: some View {
@@ -63,7 +66,8 @@ public struct KContentView: View {
                     HStack {
                         KModalView(
                             title: "Settings",
-                            viewDefinition: sv)
+                            viewDefinition: sv,
+                            style: settingsStyle)
                         Spacer()
                     }
                 }
