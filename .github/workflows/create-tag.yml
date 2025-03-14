@@ -1,8 +1,9 @@
 name: Create Tag
 
-on: workflow_dispatch
 
 on:
+  workflow_dispatch:
+    inputs:
   push:
     branches: [ main ]
     paths-ignore: [ '.gitignore', '.swift-format', 'README.md', 'LICENSE' ]
