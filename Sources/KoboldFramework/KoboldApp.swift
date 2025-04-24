@@ -9,6 +9,7 @@ open class KoboldApp: NSObject {
     open var showVersion: Bool { true }
     open var showSettings: Bool { false }
     open var settingsStyle: KModalStyle { .large }
+    open var preventScreenSleep: Bool { false }
     open var forceLoadingTime: Int { 3 }
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
     open var depthStencilPixelFormat: MTLPixelFormat { .depth32Float }
@@ -73,7 +74,8 @@ open class KoboldApp: NSObject {
                 showSettings: showSettings,
                 settingsStyle: settingsStyle,
                 loadingView: getLoadingView(),
-                settingsView: getSettingsView()
+                settingsView: getSettingsView(),
+                preventScreenSleep: preventScreenSleep
             )
             .defaultFont(font: defaultFont)
             .overrideColorScheme(colorScheme: colorScheme)
