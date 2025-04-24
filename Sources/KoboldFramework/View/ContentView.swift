@@ -12,6 +12,7 @@ public struct KContentView: View {
     let settingsView: (any View)?
     let settingsStyle: KModalStyle
     let loadingView: (any View)?
+    let preventScreenSleep: Bool
 
     public init(
         sysLink: KSysLink,
@@ -20,7 +21,8 @@ public struct KContentView: View {
         showSettings: Bool = false,
         settingsStyle: KModalStyle,
         loadingView: (any View)? = nil,
-        settingsView: (any View)? = nil
+        settingsView: (any View)? = nil,
+        preventScreenSleep: Bool = false
     ) {
         self.appName = appName
         self.sysLink = sysLink
@@ -29,6 +31,7 @@ public struct KContentView: View {
         self.settingsView = settingsView
         self.settingsStyle = settingsStyle
         self.loadingView = loadingView
+        self.preventScreenSleep = preventScreenSleep
     }
 
     public var body: some View {
@@ -39,8 +42,14 @@ public struct KContentView: View {
                 switch newPhase {
                 case.active:
                     sysLink.eventQueue.enqueue(item: .focus(KFocusEvent(state: .active)))
+                    if preventScreenSleep {
+                        UIApplication.shared.isIdleTimerDisabled = true
+                    }
                 default:
                     sysLink.eventQueue.enqueue(item: .focus(KFocusEvent(state: .inactive)))
+                    if preventScreenSleep {
+                        UIApplication.shared.isIdleTimerDisabled = false
+                    }
                 }
             }
     }
@@ -119,4 +128,3 @@ struct BackgroundClearView: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
-
