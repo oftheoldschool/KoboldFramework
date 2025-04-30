@@ -7,7 +7,7 @@ public enum KInputMode {
     case hybrid
     case none
 
-    var hasControllerInput: Bool {
+    public var hasControllerInput: Bool {
         return switch self {
         case .controller, .hybrid:
             true
