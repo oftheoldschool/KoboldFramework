@@ -58,16 +58,12 @@ struct KModalView: View {
     
     func checkWindowMode() {
         #if os(macOS)
-        // Pure macOS (not Catalyst)
         if let window = NSApplication.shared.windows.first(where: { $0.isKeyWindow }) {
             isWindowedMode = !window.styleMask.contains(.fullScreen)
             topPadding = isWindowedMode ? 44 : 16
         }
         #elseif targetEnvironment(macCatalyst)
-        // Mac Catalyst specific code
-        // For Catalyst, we can use UIScreen properties to infer
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            // Check if we're in full screen by comparing window & screen dimensions
             let screen = scene.screen
             if let window = scene.windows.first {
                 let isFullScreen = abs(window.frame.width - screen.bounds.width) < 1 &&
@@ -77,7 +73,6 @@ struct KModalView: View {
             }
         }
         #else
-        // Pure iOS
         topPadding = 16
         #endif
     }

@@ -1,73 +1,56 @@
 import GameController
 import KoboldLogging
 
-public struct KControllerType: Hashable {
-    public let id: String
-    public let description: String
-    public let isVirtual: Bool
-}
-
 public class KControllerInput: ObservableObject {
+    private var virtualController: GCVirtualController?
     @Published
-    public var availableControllers: [KControllerType] = []
+    public var allControllers: [KController] = []
     @Published
-    public var activeController: KControllerType?
-    private var currentController: GCController?
+    public var activeController: KController?
 
     private let eventQueue: KQueue<KEvent>
-
-    private var virtualController: GCVirtualController?
-    private var physicalControllers: [String: GCController] = [:]
 
     private var controllerObservers: [Any] = []
     private var currentHandlers: [Any] = []
 
-    private static let defaultController = KControllerType(
-        id: "Apple Touch Controller",
-        description: "Virtual Controller",
-        isVirtual: true)
-
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue
+        self.virtualController = nil
+
+        kinfo("Adding controllers")
+        addConnectedControllers()
+
+        kinfo("Setting up controller monitoring")
         setupControllerMonitoring()
-
-        GCController.startWirelessControllerDiscovery()
-        GCController.controllers().forEach { controller in
-            let controllerId = controller.vendorName ?? "Unknown Controller"
-            physicalControllers[controllerId] = controller
-            availableControllers.append(
-                KControllerType(
-                    id: controllerId,
-                    description: controller.description,
-                    isVirtual: false))
-        }
-
-        availableControllers.append(Self.defaultController)
     }
 
     deinit {
         disableController()
     }
 
-    public func isControllerActive(_ type: KControllerType) -> Bool {
-        activeController == type
+    private func deactivateController(controllerId: String) {
+        kinfo("Deactivating controller \(controllerId)")
+        if let controller = allControllers.first(where: { $0.id == controllerId }) {
+            switch controller.rawController {
+            case .virtual(_):
+                disableVirtualControllerView()
+            case .physical(let rawController):
+                removeControllerHandlers(rawController)
+            }
+        } else {
+            kerror("Received request to deactivate non existent controller: \(controllerId)")
+        }
     }
 
-    public func enableDefaultController() {
-        enableController(Self.defaultController)
-    }
-
-    public func enableController(_ type: KControllerType) {
+    private func createVirtualController() {
+        kinfo("Creating virtual controller")
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-
-            if let currentController = self.currentController {
-                self.removeControllerHandlers(currentController)
-            }
-            self.cleanupVirtualControllerView()
-            self.deactivatePhysicalController()
-
-            if type.id == "Apple Touch Controller" {
+            let virtualControllerExists = allControllers.contains(where: { $0.isVirtual })
+            if virtualControllerExists {
+                kwarn("Virtual controller already exists")
+            } else {
+                kinfo("Virtual controller does not already exist, creating...")
                 let configuration = GCVirtualController.Configuration()
                 configuration.elements = [
                     GCInputLeftThumbstick,
@@ -77,49 +60,54 @@ public class KControllerInput: ObservableObject {
                     GCInputButtonX,
                     GCInputButtonY,
                 ]
-
-                virtualController = GCVirtualController(configuration: configuration)
-                virtualController?.connect { [weak self] error in
-                    guard let self = self else { return }
-
+                let newVirtualController = GCVirtualController(configuration: configuration)
+                newVirtualController.connect { error in
                     if let error = error {
                         kerror("Failed to connect virtual controller: \(error.localizedDescription)")
                         return
-                    }
-
-                    if let controller = self.virtualController?.controller {
-                        self.activatePhysicalController(controller, type: type)
+                    } else {
+                        kinfo("Successfully connected virtual controller")
                     }
                 }
-            } else if let controller = self.physicalControllers[type.id] {
-                self.activatePhysicalController(controller, type: type)
-            }
-        }
-        self.objectWillChange.send()
-    }
+                virtualController = newVirtualController
+                kinfo("Adding virtual controller to all controllers")
+                allControllers.append(KController(newVirtualController))
 
-    private func cleanupVirtualControllerView() {
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            func removeControllerView(from view: UIView) {
-                if String(describing: type(of: view)) == "GCControllerView" {
-                    view.removeFromSuperview()
-                    return
-                }
-                for subview in view.subviews {
-                    removeControllerView(from: subview)
-                }
+                kinfo("Sending connected event for virtual controller")
+                let connectedEvent = KPeripheralConnectedEvent(
+                    peripheralType: .virtualController,
+                    identifier: newVirtualController.identifier)
+                eventQueue.enqueue(
+                    item: .peripheral(.connected(connectedEvent)))
+
+                kinfo("Disabling virtual controller view")
+                disableVirtualControllerView()
             }
-            removeControllerView(from: window)
         }
     }
 
-    public func disableController() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.deactivatePhysicalController()
+    private func addConnectedControllers() {
+        kinfo("Adding connected controllers")
+        createVirtualController()
+
+        GCController.startWirelessControllerDiscovery()
+        GCController.controllers().forEach { connectedController in
+            let controllerId = connectedController.identifier
+            kinfo("Found connected controller: \(controllerId)")
+            if connectedController.name == "Apple Touch Controller" {
+                kerror("Unexpectedly found connected Apple Touch Controller")
+            } else if allControllers.contains(where: { $0.id == controllerId }) {
+                kerror("Unexpectedly already added controller \(controllerId)")
+            } else {
+                kinfo("Adding connected controller \(controllerId) and sending notification")
+                allControllers.append(KController(connectedController))
+
+                let connectedEvent = KPeripheralConnectedEvent(
+                    peripheralType: .physicalController,
+                    identifier: connectedController.identifier)
+                eventQueue.enqueue(item: .peripheral(.connected(connectedEvent)))
+            }
         }
-        self.objectWillChange.send()
     }
 
     private func setupControllerMonitoring() {
@@ -128,20 +116,32 @@ public class KControllerInput: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            guard let self = self,
-                  let controller = notification.object as? GCController
-            else { return }
+            guard
+                let self = self,
+                let connectedController = notification.object as? GCController
+            else {
+                kwarn("Unable to convert connected controller notification object to GCController")
+                return
+            }
 
-            let controllerId = controller.vendorName ?? "Unknown Controller"
+            let controllerId = connectedController.identifier
+            if connectedController.name == "Apple Touch Controller" {
+                kinfo("Received notification to connect Apple Touch Controller. Disabling view")
+                disableVirtualControllerView()
+            } else if allControllers.contains(where: { $0.id == controllerId }) {
+                kerror("Received connect notification for already connected controller: \(controllerId)")
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else {
+                        return
+                    }
+                    kinfo("Adding discovered controller \(controllerId) and sending event")
+                    self.allControllers.append(KController(connectedController))
 
-            if controllerId != "Apple Touch Controller" {
-                let type = KControllerType(
-                    id: controllerId,
-                    description: controllerId,
-                    isVirtual: false)
-                self.physicalControllers[controllerId] = controller
-                if !self.availableControllers.contains(type) {
-                    self.availableControllers.append(type)
+                    let connectedEvent = KPeripheralConnectedEvent(
+                        peripheralType: .physicalController,
+                        identifier: connectedController.identifier)
+                    self.eventQueue.enqueue(item: .peripheral(.connected(connectedEvent)))
                 }
             }
         }
@@ -151,23 +151,29 @@ public class KControllerInput: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            guard let self = self,
-                  let controller = notification.object as? GCController
-            else { return }
-
-            let controllerId = controller.vendorName ?? controller.productCategory
-            let type = KControllerType(
-                id: controllerId,
-                description: controllerId,
-                isVirtual: controllerId == "Apple Touch Controller")
-
-            if controllerId != "Apple Touch Controller" {
-                self.physicalControllers.removeValue(forKey: controllerId)
-                self.availableControllers.removeAll(where: { $0 == type })
+            guard
+                let self = self,
+                let disconnectedController = notification.object as? GCController
+            else {
+                kwarn("Unable to convert disconnected controller notification object to GCController")
+                return
             }
 
-            if type == self.activeController {
-                self.deactivatePhysicalController()
+            let controllerId = disconnectedController.identifier
+            if disconnectedController.name == "Apple Touch Controller" {
+                kerror("Received notification to disconnect Apple Touch Controller disconnected")
+            } else if allControllers.contains(where: { $0.id == controllerId }) {
+                kinfo("Disconnecting controller \(controllerId) and sending event")
+                deactivateController(controllerId: controllerId)
+                self.allControllers.removeAll(where: { $0.id == controllerId} )
+
+                let disconnectedEvent = KPeripheralDisconnectedEvent(
+                    peripheralType: .physicalController,
+                    identifier: disconnectedController.identifier)
+                eventQueue.enqueue(
+                    item: .peripheral(.disconnected(disconnectedEvent)))
+            } else {
+                kerror("Received notification to disconnect unknown controller: \(controllerId)")
             }
         }
 
@@ -175,50 +181,62 @@ public class KControllerInput: ObservableObject {
         controllerObservers.append(disconnectObserver)
     }
 
-    private func activatePhysicalController(_ controller: GCController, type: KControllerType) {
-        currentController = controller
-        activeController = type
+    private func activatePhysicalController(_ controller: KController) {
+        kinfo("Setting up controller handlers for \(controller.id)")
         setupControllerHandlers(controller)
 
-        let connectedEvent = KPeripheralConnectedEvent(peripheralType: .physicalController)
-        eventQueue.enqueue(item: .peripheral(.connected(connectedEvent)))
-    }
+        kinfo("Setting active controller id to \(controller.id)")
+        self.activeController = controller
 
-    private func deactivatePhysicalController() {
-        if activeController != nil {
-            if let controller = currentController,
-               let controllerId = controller.vendorName
-            {
-                removeControllerHandlers(controller)
-                if controllerId == "Apple Touch Controller" {
-                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                       let window = windowScene.windows.first {
-                        func removeControllerView(from view: UIView) {
-                            if String(describing: type(of: view)) == "GCControllerView" {
-                                view.removeFromSuperview()
-                                return
-                            }
-                            for subview in view.subviews {
-                                removeControllerView(from: subview)
-                            }
-                        }
-                        removeControllerView(from: window)
-                    }
-                    virtualController?.disconnect()
-                    virtualController = nil
-                }
-            }
-
-            activeController = nil
-            currentController = nil
-
-            let disconnectedEvent = KPeripheralDisconnectedEvent(peripheralType: .physicalController)
-            eventQueue.enqueue(item: .peripheral(.disconnected(disconnectedEvent)))
+        if controller.isVirtual {
+            enableVirtualControllerView()
         }
     }
 
-    private func setupControllerHandlers(_ controller: GCController) {
-        guard let gamepad = controller.extendedGamepad else {
+    public func enableDefaultController() {
+        if let defaultController = allControllers.sorted(by: { (a, b) in !a.isVirtual && b.isVirtual }).first {
+            enableControllerById(defaultController.id)
+        }
+    }
+
+    public func enableControllerById(_ controllerId: String) {
+        kinfo("Enabling controller \(controllerId)")
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            guard let controller = allControllers.first(where: { $0.id == controllerId }) else {
+                kerror("Unable to activate controller \(controllerId) - controller not found")
+                return
+            }
+
+            if let activeController = activeController,
+                let activeGCController = activeController.gcController
+            {
+                kinfo("Found existing controller: \(activeController.id), disabling it")
+                self.removeControllerHandlers(activeGCController)
+                self.deactivateController(controllerId: activeController.id)
+            }
+
+            kinfo("Activating controller \(controllerId)")
+            self.activatePhysicalController(controller)
+        }
+        self.objectWillChange.send()
+    }
+
+    public func disableController() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if let activeController = self.activeController {
+                self.deactivateController(controllerId: activeController.id)
+            }
+        }
+        self.objectWillChange.send()
+    }
+
+    private func setupControllerHandlers(_ controller: KController) {
+        guard
+            let gcController = controller.gcController,
+            let gamepad = gcController.extendedGamepad
+        else {
             kerror("Extended gamepad not available")
             return
         }
@@ -313,5 +331,47 @@ public class KControllerInput: ObservableObject {
 
         gamepad.leftThumbstick.valueChangedHandler = nil
         gamepad.rightThumbstick.valueChangedHandler = nil
+    }
+
+    private func enableVirtualControllerView() {
+        kinfo("Enabling Virtual Controller View")
+        DispatchQueue.main.async {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                func enableControllerView(from view: UIView) {
+                    if String(describing: type(of: view)) == "GCControllerView" {
+                        kinfo("Enabling GCView")
+                        view.isUserInteractionEnabled = true
+                        view.alpha = 1
+                        return
+                    }
+                    for subview in view.subviews {
+                        enableControllerView(from: subview)
+                    }
+                }
+                enableControllerView(from: window)
+            }
+        }
+    }
+
+    private func disableVirtualControllerView() {
+        kinfo("Disabling Virtual Controller View")
+        DispatchQueue.main.async {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                func removeControllerView(from view: UIView) {
+                    if String(describing: type(of: view)) == "GCControllerView" {
+                        kinfo("Hiding GCView")
+                        view.isUserInteractionEnabled = false
+                        view.alpha = 0
+                        return
+                    }
+                    for subview in view.subviews {
+                        removeControllerView(from: subview)
+                    }
+                }
+                removeControllerView(from: window)
+            }
+        }
     }
 }

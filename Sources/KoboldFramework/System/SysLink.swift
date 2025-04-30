@@ -34,7 +34,7 @@ public class KSysLink: NSObject, ObservableObject {
     override init() {
         let eventQueue = KQueue<KEvent>(maxSize: 2048)
         self.fileSystem = KFileSystem()
-        self.inputSystem = KInputSystem(eventQueue)
+        self.inputSystem = KInputSystem(eventQueue: eventQueue)
         self.device = MTLCreateSystemDefaultDevice()!
         self.eventQueue = eventQueue
         self.bounds = (width: 0, height: 0)

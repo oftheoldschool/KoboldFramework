@@ -1,10 +1,20 @@
 import SwiftUI
+import KoboldLogging
 
 public enum KInputMode {
     case controller
     case touchscreen
     case hybrid
     case none
+
+    var hasControllerInput: Bool {
+        return switch self {
+        case .controller, .hybrid:
+            true
+        default:
+            false
+        }
+    }
 }
 
 public class KInputSystem: ObservableObject {
@@ -18,8 +28,17 @@ public class KInputSystem: ObservableObject {
     public var controllerInput: KControllerInput
     public var controllerState: KControllerState!
 
-    init(_ eventQueue: KQueue<KEvent>) {
+    public var autoSwitchToPhysicalOnConnect: Bool
+    public var autoSwitchToVirtualOnDisconnect: Bool
+
+    init(
+        eventQueue: KQueue<KEvent>,
+        autoSwitchToVirtualOnDisconnect: Bool = true,
+        autoSwitchToPhysicalOnConnect: Bool = true
+    ) {
         self.inputMode = .none
+        self.autoSwitchToVirtualOnDisconnect = autoSwitchToVirtualOnDisconnect
+        self.autoSwitchToPhysicalOnConnect = autoSwitchToPhysicalOnConnect
 
         self.touchScreenInput = KTouchScreenInput(eventQueue: eventQueue)
         self.touchScreenState = KTouchScreenState()
@@ -27,9 +46,30 @@ public class KInputSystem: ObservableObject {
         self.controllerInput = KControllerInput(eventQueue: eventQueue)
         self.controllerState = KControllerState()
     }
-
-    public func getAvailableControllers() -> [KControllerType] {
-        return controllerInput.availableControllers
+    
+    public func processInputs(events: [KEvent]) {
+        for event in events {
+            switch event {
+            case .peripheral(let peripheral):
+                switch peripheral {
+                case .connected(let connectedEvent):
+                    if autoSwitchToPhysicalOnConnect
+                        && connectedEvent.peripheralType == .physicalController
+                        && controllerInput.activeController?.isVirtual ?? false
+                    {
+                        controllerInput.enableControllerById(connectedEvent.identifier)
+                    }
+                case .disconnected(_):
+                    if autoSwitchToVirtualOnDisconnect
+                        && controllerInput.allControllers.count == 1
+                        && inputMode.hasControllerInput
+                    {
+                        controllerInput.enableDefaultController()
+                    }
+                }
+            default: continue
+            }
+        }
     }
 
     public func setInputMode(_ inputMode: KInputMode) {

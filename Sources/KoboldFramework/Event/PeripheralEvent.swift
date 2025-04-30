@@ -10,8 +10,10 @@ public enum KPeripheralType {
 
 public struct KPeripheralConnectedEvent {
     let peripheralType: KPeripheralType
+    let identifier: String
 }
 
 public struct KPeripheralDisconnectedEvent {
     let peripheralType: KPeripheralType
+    let identifier: String
 }

@@ -22,6 +22,8 @@ open class KoboldApp: NSObject {
     }
     open var defaultFont: Font? { nil }
     open var colorScheme: ColorScheme? { nil }
+    open var autoSwitchToPhysicalOnConnect: Bool { true }
+    open var autoSwitchToVirtualOnDisconnect: Bool { true }
 
     public override required init() {
         super.init()
@@ -41,6 +43,8 @@ open class KoboldApp: NSObject {
         self.sysLink.clearColor = clearColor
         self.sysLink.colorPixelFormat = colorPixelFormat
         self.sysLink.depthStencilPixelFormat = depthStencilPixelFormat
+        self.sysLink.inputSystem.autoSwitchToPhysicalOnConnect = autoSwitchToPhysicalOnConnect
+        self.sysLink.inputSystem.autoSwitchToVirtualOnDisconnect = autoSwitchToVirtualOnDisconnect
         self.frameHandler = createFrameHandler(sysLink: sysLink)
 
         DispatchQueue.main.async { [self] in

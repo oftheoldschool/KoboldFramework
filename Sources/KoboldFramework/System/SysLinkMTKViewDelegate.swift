@@ -61,6 +61,7 @@ extension KSysLink: MTKViewDelegate {
             }
         }
 
+        inputSystem.processInputs(events: events)
         switch inputSystem.inputMode {
         case .controller:
             inputSystem.controllerState.processInputs(events: events)
