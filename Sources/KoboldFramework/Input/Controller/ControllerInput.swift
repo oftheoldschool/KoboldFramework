@@ -8,6 +8,8 @@ public class KControllerInput: ObservableObject {
     @Published
     public var activeController: KController?
 
+    public var virtualControllerFadeTime: TimeInterval = 0
+
     private let eventQueue: KQueue<KEvent>
 
     private var controllerObservers: [Any] = []
@@ -342,7 +344,13 @@ public class KControllerInput: ObservableObject {
                     if String(describing: type(of: view)) == "GCControllerView" {
                         kinfo("Enabling GCView")
                         view.isUserInteractionEnabled = true
-                        view.alpha = 1
+                        if view.alpha == 0 && self.virtualControllerFadeTime > 0 {
+                            UIView.animate(withDuration: self.virtualControllerFadeTime, delay: 0, options: .curveEaseIn) {
+                                view.alpha = 1
+                            }
+                        } else {
+                            view.alpha = 1
+                        }
                         return
                     }
                     for subview in view.subviews {

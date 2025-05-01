@@ -7,21 +7,33 @@ open class KoboldApp: NSObject {
 
     open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { true }
+
+    // settings config
     open var showSettings: Bool { false }
     open var settingsStyle: KModalStyle { .large }
-    open var preventScreenSleep: Bool { false }
-    open var forceLoadingTime: Int { 3 }
+
+    // metal view config
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
     open var depthStencilPixelFormat: MTLPixelFormat { .depth32Float }
     open var clearColor: (r: Float, g: Float, b: Float) { (r: 0, g: 0, b: 0) }
+
+    // general ux config
+    open var preventScreenSleep: Bool { false }
+    open var defaultFont: Font? { nil }
+    open var colorScheme: ColorScheme? { nil }
+
+    // loading screen config
+    open var forceLoadingTimeSeconds: TimeInterval { 3 }
+    open var loadingScreenFadeTimeSeconds: TimeInterval { 1 }
     open var loadingScreenColors: [(r: Float, g: Float, b: Float)] {
         [
             (r: 0.5, g: 0.667, b: 1),
             (r: 0.75, g: 0.334, b: 1),
         ]
     }
-    open var defaultFont: Font? { nil }
-    open var colorScheme: ColorScheme? { nil }
+
+    // input config
+    open var defaultInputMode: KInputMode { .none }
     open var autoSwitchToPhysicalOnConnect: Bool { true }
     open var autoSwitchToVirtualOnDisconnect: Bool { true }
 
@@ -29,12 +41,13 @@ open class KoboldApp: NSObject {
         super.init()
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             setup()
-            if forceLoadingTime > 0 {
-                sleep(UInt32(forceLoadingTime))
+            if forceLoadingTimeSeconds > 0 {
+                sleep(UInt32(forceLoadingTimeSeconds))
             }
             DispatchQueue.main.async { [self] in
                 self.sysLink.frameHandlerReady = true
             }
+            self.sysLink.inputSystem.setInputMode(defaultInputMode)
             postSetup()
         }
     }
@@ -43,8 +56,10 @@ open class KoboldApp: NSObject {
         self.sysLink.clearColor = clearColor
         self.sysLink.colorPixelFormat = colorPixelFormat
         self.sysLink.depthStencilPixelFormat = depthStencilPixelFormat
+        self.sysLink.inputSystem.inputMode = .none
         self.sysLink.inputSystem.autoSwitchToPhysicalOnConnect = autoSwitchToPhysicalOnConnect
         self.sysLink.inputSystem.autoSwitchToVirtualOnDisconnect = autoSwitchToVirtualOnDisconnect
+        self.sysLink.inputSystem.controllerInput.virtualControllerFadeTime = loadingScreenFadeTimeSeconds
         self.frameHandler = createFrameHandler(sysLink: sysLink)
 
         DispatchQueue.main.async { [self] in
@@ -79,7 +94,8 @@ open class KoboldApp: NSObject {
                 settingsStyle: settingsStyle,
                 loadingView: getLoadingView(),
                 settingsView: getSettingsView(),
-                preventScreenSleep: preventScreenSleep
+                preventScreenSleep: preventScreenSleep,
+                loadingScreenFadeTimeSeconds: loadingScreenFadeTimeSeconds
             )
             .defaultFont(font: defaultFont)
             .overrideColorScheme(colorScheme: colorScheme)

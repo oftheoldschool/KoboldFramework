@@ -13,6 +13,7 @@ public struct KContentView: View {
     let settingsStyle: KModalStyle
     let loadingView: (any View)?
     let preventScreenSleep: Bool
+    let loadingScreenFadeTimeSeconds: TimeInterval
 
     public init(
         sysLink: KSysLink,
@@ -22,7 +23,8 @@ public struct KContentView: View {
         settingsStyle: KModalStyle,
         loadingView: (any View)? = nil,
         settingsView: (any View)? = nil,
-        preventScreenSleep: Bool = false
+        preventScreenSleep: Bool = false,
+        loadingScreenFadeTimeSeconds: TimeInterval
     ) {
         self.appName = appName
         self.sysLink = sysLink
@@ -32,6 +34,7 @@ public struct KContentView: View {
         self.settingsStyle = settingsStyle
         self.loadingView = loadingView
         self.preventScreenSleep = preventScreenSleep
+        self.loadingScreenFadeTimeSeconds = loadingScreenFadeTimeSeconds
     }
 
     public var body: some View {
@@ -65,7 +68,7 @@ public struct KContentView: View {
                 }
                 .zIndex(30)
                 .animation(
-                    .easeOut(duration: 1),
+                    .easeOut(duration: loadingScreenFadeTimeSeconds),
                     value: !sysLink.frameHandlerReady)
                 .allowsHitTesting(false)
             }
