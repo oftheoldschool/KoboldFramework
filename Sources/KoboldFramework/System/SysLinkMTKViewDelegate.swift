@@ -62,16 +62,17 @@ extension KSysLink: MTKViewDelegate {
         }
 
         inputSystem.processInputs(events: events)
-        switch inputSystem.inputMode {
-        case .controller:
+
+        if inputSystem.inputMode.contains(.controller) {
             inputSystem.controllerState.processInputs(events: events)
-        case .touchscreen:
+        }
+
+        if inputSystem.inputMode.contains(.touchscreen) {
             inputSystem.touchScreenState.processInputs(events: events)
-        case .hybrid:
-            inputSystem.controllerState.processInputs(events: events)
-            inputSystem.touchScreenState.processInputs(events: events)
-        default:
-            break
+        }
+
+        if inputSystem.inputMode.contains(.keyboard) {
+            inputSystem.keyboardState.processInputs(events: events)
         }
 
         if let handler = self.frameHandler {

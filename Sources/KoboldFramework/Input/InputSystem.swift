@@ -1,32 +1,33 @@
 import SwiftUI
 import KoboldLogging
 
-public enum KInputMode {
-    case controller
-    case touchscreen
-    case hybrid
-    case none
+public struct KInputMode: OptionSet {
+    public let rawValue: Int
 
-    public var hasControllerInput: Bool {
-        return switch self {
-        case .controller, .hybrid:
-            true
-        default:
-            false
-        }
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
     }
+
+    public static let none = KInputMode([])
+    public static let controller = KInputMode(rawValue: 1 << 0)
+    public static let touchscreen = KInputMode(rawValue: 1 << 1)
+    public static let keyboard = KInputMode(rawValue: 1 << 2)
 }
 
 public class KInputSystem: ObservableObject {
     @Published
     public var inputMode: KInputMode
 
-    public var touchScreenInput: KTouchScreenInput!
+    public var touchScreenInput: KTouchScreenInput
     public var touchScreenState: KTouchScreenState!
 
     @Published
     public var controllerInput: KControllerInput
     public var controllerState: KControllerState!
+
+    @Published
+    public var keyboardInput: KKeyboardInput
+    public var keyboardState: KKeyboardState!
 
     public var autoSwitchToPhysicalOnConnect: Bool
     public var autoSwitchToVirtualOnDisconnect: Bool
@@ -45,8 +46,11 @@ public class KInputSystem: ObservableObject {
 
         self.controllerInput = KControllerInput(eventQueue: eventQueue)
         self.controllerState = KControllerState()
+
+        self.keyboardInput = KKeyboardInput(eventQueue: eventQueue)
+        self.keyboardState = KKeyboardState()
     }
-    
+
     public func processInputs(events: [KEvent]) {
         for event in events {
             switch event {
@@ -59,12 +63,18 @@ public class KInputSystem: ObservableObject {
                     {
                         controllerInput.enableControllerById(connectedEvent.identifier)
                     }
-                case .disconnected(_):
-                    if autoSwitchToVirtualOnDisconnect
+                case .disconnected(let peripheralDisconnectedEvent):
+                    if peripheralDisconnectedEvent.peripheralType == .physicalController && autoSwitchToVirtualOnDisconnect
                         && controllerInput.allControllers.count == 1
-                        && inputMode.hasControllerInput
+                        && inputMode.contains(.controller)
                     {
                         controllerInput.enableDefaultController()
+                    }
+
+                    if peripheralDisconnectedEvent.peripheralType == .keyboard {
+                        if keyboardInput.connectedKeyboards.isEmpty {
+                            inputMode.remove(.keyboard)
+                        }
                     }
                 }
             default: continue
@@ -72,34 +82,36 @@ public class KInputSystem: ObservableObject {
         }
     }
 
+    public func toggleInputMode(_ inputMode: KInputMode) {
+        let newInputMode = self.inputMode.symmetricDifference(inputMode)
+        setInputMode(newInputMode)
+    }
+
     public func setInputMode(_ inputMode: KInputMode) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             let previousInputMode = self.inputMode
 
-            switch previousInputMode {
-            case .controller:
+            if previousInputMode.contains(.controller) {
                 controllerInput.disableController()
-            case .touchscreen:
+            }
+            if previousInputMode.contains(.touchscreen) {
                 touchScreenInput.disableTouchInput()
-            case .hybrid:
-                controllerInput.disableController()
-                touchScreenInput.disableTouchInput()
-            case .none:
-                break
+            }
+            if previousInputMode.contains(.keyboard) {
+                keyboardInput.disableKeyboardInput()
             }
 
-            switch inputMode {
-            case .controller:
+            if inputMode.contains(.controller) {
                 controllerInput.enableDefaultController()
-            case .touchscreen:
-                touchScreenInput.enableTouchInput()
-            case .hybrid:
-                touchScreenInput.enableTouchInput()
-                controllerInput.enableDefaultController()
-            case .none:
-                break
             }
+            if inputMode.contains(.touchscreen) {
+                touchScreenInput.enableTouchInput()
+            }
+            if inputMode.contains(.keyboard) {
+                keyboardInput.enableKeyboardInput()
+            }
+
             self.inputMode = inputMode
         }
         self.objectWillChange.send()

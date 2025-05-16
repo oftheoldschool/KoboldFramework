@@ -6,6 +6,7 @@ public enum KPeripheralEvent {
 public enum KPeripheralType {
     case physicalController
     case virtualController
+    case keyboard
 }
 
 public struct KPeripheralConnectedEvent {
