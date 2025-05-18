@@ -119,7 +119,6 @@ public struct KContentView: View {
     }
 }
 
-
 struct BackgroundClearView: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let view = UIView()

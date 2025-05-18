@@ -12,6 +12,7 @@ public struct KInputMode: OptionSet {
     public static let controller = KInputMode(rawValue: 1 << 0)
     public static let touchscreen = KInputMode(rawValue: 1 << 1)
     public static let keyboard = KInputMode(rawValue: 1 << 2)
+    public static let mouse = KInputMode(rawValue: 1 << 3)
 }
 
 public class KInputSystem: ObservableObject {
@@ -28,6 +29,10 @@ public class KInputSystem: ObservableObject {
     @Published
     public var keyboardInput: KKeyboardInput
     public var keyboardState: KKeyboardState!
+
+    @Published
+    public var mouseInput: KMouseInput
+    public var mouseState: KMouseState!
 
     public var autoSwitchToPhysicalOnConnect: Bool
     public var autoSwitchToVirtualOnDisconnect: Bool
@@ -49,6 +54,9 @@ public class KInputSystem: ObservableObject {
 
         self.keyboardInput = KKeyboardInput(eventQueue: eventQueue)
         self.keyboardState = KKeyboardState()
+
+        self.mouseInput = KMouseInput(eventQueue: eventQueue)
+        self.mouseState = KMouseState()
     }
 
     public func processInputs(events: [KEvent]) {
@@ -101,6 +109,9 @@ public class KInputSystem: ObservableObject {
             if previousInputMode.contains(.keyboard) {
                 keyboardInput.disableKeyboardInput()
             }
+            if previousInputMode.contains(.mouse) {
+                mouseInput.disableMouseInput()
+            }
 
             if inputMode.contains(.controller) {
                 controllerInput.enableDefaultController()
@@ -110,6 +121,9 @@ public class KInputSystem: ObservableObject {
             }
             if inputMode.contains(.keyboard) {
                 keyboardInput.enableKeyboardInput()
+            }
+            if inputMode.contains(.mouse) {
+                mouseInput.enableMouseInput()
             }
 
             self.inputMode = inputMode

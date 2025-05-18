@@ -29,7 +29,7 @@ extension KSysLink: UIApplicationDelegate {
         self.applicationFinishedLaunching = true
         return true
     }
-    
+
     static func orientationToString(orientation: UIInterfaceOrientation) -> String {
         switch orientation {
         case .portrait: return "portrait"

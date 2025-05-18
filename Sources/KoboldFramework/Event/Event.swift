@@ -12,5 +12,6 @@ public enum KInputEvent {
     case pan(KPanEvent)
     case tap(KTapEvent)
     case keyboard(KKeyboardEvent)
+    case mouse(KMouseEvent)
 }
 

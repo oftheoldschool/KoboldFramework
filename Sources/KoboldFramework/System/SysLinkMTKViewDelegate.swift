@@ -75,6 +75,10 @@ extension KSysLink: MTKViewDelegate {
             inputSystem.keyboardState.processInputs(events: events)
         }
 
+        if inputSystem.inputMode.contains(.mouse) {
+            inputSystem.mouseState.processInputs(events: events)
+        }
+
         if let handler = self.frameHandler {
             handler.handleFrame(frameData: frameData)
         }
