@@ -13,8 +13,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             titleBar.titleVisibility = .hidden
             titleBar.toolbar = nil
             sizes.allowsFullScreen = true
-            sizes.minimumSize = windowScene.screen.bounds.size
-            sizes.maximumSize = windowScene.screen.bounds.size
+//            sizes.minimumSize = windowScene.screen.bounds.size
+//            sizes.maximumSize = windowScene.screen.bounds.size
         }
 #endif
     }
