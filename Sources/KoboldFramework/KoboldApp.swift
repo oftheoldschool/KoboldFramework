@@ -10,7 +10,7 @@ open class KoboldApp: NSObject {
 
     // settings config
     open var showSettings: Bool { false }
-    open var settingsStyle: KModalStyle { .large }
+    open var settingsStyle: KModalStyle { [.medium, .large] }
 
     // metal view config
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }

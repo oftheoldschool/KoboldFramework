@@ -9,10 +9,34 @@ public class KModalState: ObservableObject {
     private init() {}
 }
 
-public enum KModalStyle {
-    case medium
-    case large
-    case fullScreen
+public struct KModalStyle: OptionSet {
+    public let rawValue: Int
+
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    public static let medium = KModalStyle(rawValue: 1 << 0)
+    public static let large = KModalStyle(rawValue: 1 << 1)
+    public static let fullScreen = KModalStyle(rawValue: 1 << 2)
+
+    var presentationDetents: Set<PresentationDetent> {
+        var detents: Set<PresentationDetent> = []
+
+        if self.contains(.medium) {
+            detents.insert(.medium)
+        }
+
+        if self.contains(.large) {
+            detents.insert(.large)
+        }
+
+        if detents.isEmpty {
+            detents.insert(.medium)
+        }
+
+        return detents
+    }
 }
 
 struct KModalView: View {
@@ -55,7 +79,7 @@ struct KModalView: View {
             viewDefinition: viewDefinition
         ))
     }
-    
+
     func checkWindowMode() {
         #if os(macOS)
         if let window = NSApplication.shared.windows.first(where: { $0.isKeyWindow }) {
@@ -85,7 +109,7 @@ private struct ModalPresentation: ViewModifier {
     let viewDefinition: any View
 
     func body(content: Content) -> some View {
-        if style == .fullScreen {
+        if style.contains(.fullScreen) {
             content.modifier(
                 FullScreenModal(isPresented: $isPresented, title: title, viewDefinition: viewDefinition)
             )
@@ -120,7 +144,7 @@ private struct SheetModal: ViewModifier {
                 AnyView(viewDefinition)
                     .padding([.all], 20)
             }
-            .presentationDetents(style == .medium ? [.medium] : [.large])
+            .presentationDetents(style.presentationDetents)
             .presentationBackground(Material.ultraThin)
         }
     }
