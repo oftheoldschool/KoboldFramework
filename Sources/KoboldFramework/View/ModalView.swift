@@ -158,7 +158,6 @@ private struct SheetModal: ViewModifier {
                 Text(title)
                     .dynamicTypeSize(.xxxLarge)
                 AnyView(viewDefinition)
-                    .padding([.all], 20)
             }
             .presentationDetents(style.presentationDetents)
             .presentationBackground(Material.ultraThin)
