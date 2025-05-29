@@ -11,6 +11,7 @@ public struct KContentView: View {
     let showSettings: Bool
     let settingsView: (any View)?
     let settingsStyle: KModalStyle
+    let settingsDeviceStyleOverrides: [KDeviceType: KModalStyle]
     let loadingView: (any View)?
     let preventScreenSleep: Bool
     let loadingScreenFadeTimeSeconds: TimeInterval
@@ -21,6 +22,7 @@ public struct KContentView: View {
         showVersion: Bool = true,
         showSettings: Bool = false,
         settingsStyle: KModalStyle,
+        settingsDeviceStyleOverrides: [KDeviceType: KModalStyle],
         loadingView: (any View)? = nil,
         settingsView: (any View)? = nil,
         preventScreenSleep: Bool = false,
@@ -32,6 +34,7 @@ public struct KContentView: View {
         self.showSettings = showSettings
         self.settingsView = settingsView
         self.settingsStyle = settingsStyle
+        self.settingsDeviceStyleOverrides = settingsDeviceStyleOverrides
         self.loadingView = loadingView
         self.preventScreenSleep = preventScreenSleep
         self.loadingScreenFadeTimeSeconds = loadingScreenFadeTimeSeconds
@@ -79,7 +82,8 @@ public struct KContentView: View {
                         KModalView(
                             title: "Settings",
                             viewDefinition: sv,
-                            style: settingsStyle)
+                            style: settingsStyle,
+                            deviceStyleOverrides: settingsDeviceStyleOverrides)
                         Spacer()
                     }
                 }

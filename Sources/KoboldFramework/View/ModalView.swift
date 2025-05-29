@@ -47,11 +47,18 @@ struct KModalView: View {
     let title: String
     let viewDefinition: any View
     let style: KModalStyle
+    let deviceStyleOverrides: [KDeviceType: KModalStyle]
 
-    init(title: String, viewDefinition: any View, style: KModalStyle) {
+    init(
+        title: String,
+        viewDefinition: any View,
+        style: KModalStyle,
+        deviceStyleOverrides: [KDeviceType: KModalStyle]
+    ) {
         self.title = title
         self.viewDefinition = viewDefinition
         self.style = style
+        self.deviceStyleOverrides = deviceStyleOverrides
     }
 
     var body: some View {
@@ -76,7 +83,8 @@ struct KModalView: View {
             isPresented: $modalState.presentAnotherView,
             style: style,
             title: title,
-            viewDefinition: viewDefinition
+            viewDefinition: viewDefinition,
+            deviceStyleOverrides: deviceStyleOverrides
         ))
     }
 
@@ -107,15 +115,23 @@ private struct ModalPresentation: ViewModifier {
     let style: KModalStyle
     let title: String
     let viewDefinition: any View
+    let deviceStyleOverrides: [KDeviceType: KModalStyle]
 
     func body(content: Content) -> some View {
-        if style.contains(.fullScreen) {
+        let resolvedStyle = deviceStyleOverrides[KDeviceType.current] ?? style
+
+        if resolvedStyle.contains(.fullScreen) {
             content.modifier(
                 FullScreenModal(isPresented: $isPresented, title: title, viewDefinition: viewDefinition)
             )
         } else {
             content.modifier(
-                SheetModal(isPresented: $isPresented, style: style, title: title, viewDefinition: viewDefinition)
+                SheetModal(
+                    isPresented: $isPresented,
+                    style: resolvedStyle,
+                    title: title,
+                    viewDefinition: viewDefinition
+                )
             )
         }
     }

@@ -11,6 +11,7 @@ open class KoboldApp: NSObject {
     // settings config
     open var showSettings: Bool { false }
     open var settingsStyle: KModalStyle { [.medium, .large] }
+    open var settingsDeviceStyleOverrides: [KDeviceType: KModalStyle] = [:]
 
     // metal view config
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
@@ -92,6 +93,7 @@ open class KoboldApp: NSObject {
                 showVersion: showVersion,
                 showSettings: showSettings,
                 settingsStyle: settingsStyle,
+                settingsDeviceStyleOverrides: settingsDeviceStyleOverrides,
                 loadingView: getLoadingView(),
                 settingsView: getSettingsView(),
                 preventScreenSleep: preventScreenSleep,
