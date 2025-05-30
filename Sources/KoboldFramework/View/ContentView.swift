@@ -9,6 +9,8 @@ public struct KContentView: View {
     let appName: String
     let showVersion: Bool
     let showSettings: Bool
+    let settingsTitle: String
+    let showSettingsTitle: Bool
     let settingsView: (any View)?
     let settingsStyle: KModalStyle
     let settingsDeviceStyleOverrides: [KDeviceType: KModalStyle]
@@ -21,6 +23,8 @@ public struct KContentView: View {
         appName: String,
         showVersion: Bool = true,
         showSettings: Bool = false,
+        settingsTitle: String,
+        showSettingsTitle: Bool,
         settingsStyle: KModalStyle,
         settingsDeviceStyleOverrides: [KDeviceType: KModalStyle],
         loadingView: (any View)? = nil,
@@ -32,6 +36,8 @@ public struct KContentView: View {
         self.sysLink = sysLink
         self.showVersion = showVersion
         self.showSettings = showSettings
+        self.settingsTitle = settingsTitle
+        self.showSettingsTitle = showSettingsTitle
         self.settingsView = settingsView
         self.settingsStyle = settingsStyle
         self.settingsDeviceStyleOverrides = settingsDeviceStyleOverrides
@@ -80,7 +86,8 @@ public struct KContentView: View {
                 if showSettings, let sv = settingsView {
                     HStack {
                         KModalView(
-                            title: "Settings",
+                            title: settingsTitle,
+                            showTitle: showSettingsTitle,
                             viewDefinition: sv,
                             style: settingsStyle,
                             deviceStyleOverrides: settingsDeviceStyleOverrides)

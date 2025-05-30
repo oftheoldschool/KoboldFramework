@@ -45,17 +45,20 @@ struct KModalView: View {
     @State private var topPadding: CGFloat = 0
 
     let title: String
+    let showTitle: Bool
     let viewDefinition: any View
     let style: KModalStyle
     let deviceStyleOverrides: [KDeviceType: KModalStyle]
 
     init(
         title: String,
+        showTitle: Bool,
         viewDefinition: any View,
         style: KModalStyle,
         deviceStyleOverrides: [KDeviceType: KModalStyle]
     ) {
         self.title = title
+        self.showTitle = showTitle
         self.viewDefinition = viewDefinition
         self.style = style
         self.deviceStyleOverrides = deviceStyleOverrides
@@ -83,6 +86,7 @@ struct KModalView: View {
             isPresented: $modalState.presentAnotherView,
             style: style,
             title: title,
+            showTitle: showTitle,
             viewDefinition: viewDefinition,
             deviceStyleOverrides: deviceStyleOverrides
         ))
@@ -114,6 +118,7 @@ private struct ModalPresentation: ViewModifier {
     @Binding var isPresented: Bool
     let style: KModalStyle
     let title: String
+    let showTitle: Bool
     let viewDefinition: any View
     let deviceStyleOverrides: [KDeviceType: KModalStyle]
 
@@ -122,7 +127,11 @@ private struct ModalPresentation: ViewModifier {
 
         if resolvedStyle.contains(.fullScreen) {
             content.modifier(
-                FullScreenModal(isPresented: $isPresented, title: title, viewDefinition: viewDefinition)
+                FullScreenModal(
+                    isPresented: $isPresented,
+                    title: title,
+                    showTitle: showTitle,
+                    viewDefinition: viewDefinition)
             )
         } else {
             content.modifier(
@@ -130,6 +139,7 @@ private struct ModalPresentation: ViewModifier {
                     isPresented: $isPresented,
                     style: resolvedStyle,
                     title: title,
+                    showTitle: showTitle,
                     viewDefinition: viewDefinition
                 )
             )
@@ -141,6 +151,7 @@ private struct SheetModal: ViewModifier {
     @Binding var isPresented: Bool
     let style: KModalStyle
     let title: String
+    let showTitle: Bool
     let viewDefinition: any View
 
     func body(content: Content) -> some View {
@@ -155,8 +166,10 @@ private struct SheetModal: ViewModifier {
                     .fixedSize()
                     .padding([.top, .trailing], 20)
                 }
-                Text(title)
-                    .dynamicTypeSize(.xxxLarge)
+                if showTitle {
+                    Text(title)
+                        .dynamicTypeSize(.xxxLarge)
+                }
                 AnyView(viewDefinition)
             }
             .presentationDetents(style.presentationDetents)
@@ -168,6 +181,7 @@ private struct SheetModal: ViewModifier {
 private struct FullScreenModal: ViewModifier {
     @Binding var isPresented: Bool
     let title: String
+    let showTitle: Bool
     let viewDefinition: any View
 
     func body(content: Content) -> some View {
@@ -182,8 +196,10 @@ private struct FullScreenModal: ViewModifier {
                     .fixedSize()
                     .padding([.top, .trailing], 20)
                 }
-                Text(title)
-                    .dynamicTypeSize(.xxxLarge)
+                if showTitle {
+                    Text(title)
+                        .dynamicTypeSize(.xxxLarge)
+                }
                 AnyView(viewDefinition)
                     .padding([.all], 20)
             }
