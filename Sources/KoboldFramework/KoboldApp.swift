@@ -14,6 +14,8 @@ open class KoboldApp: NSObject {
     open var settingsDeviceStyleOverrides: [KDeviceType: KModalStyle] { [:] }
     open var settingsTitle: String { "Settings" }
     open var showSettingsTitle: Bool { false }
+    open var settingsDimissButtonTitle: String { "Done" }
+    open var showSettingsDismissButton: Bool { true }
 
     // metal view config
     open var colorPixelFormat: MTLPixelFormat { .bgra8Unorm }
@@ -96,6 +98,8 @@ open class KoboldApp: NSObject {
                 showSettings: showSettings,
                 settingsTitle: settingsTitle,
                 showSettingsTitle: showSettingsTitle,
+                settingsDimissbuttonTitle: settingsDimissButtonTitle,
+                showSettingsDismissButton: showSettingsDismissButton,
                 settingsStyle: settingsStyle,
                 settingsDeviceStyleOverrides: settingsDeviceStyleOverrides,
                 loadingView: getLoadingView(),

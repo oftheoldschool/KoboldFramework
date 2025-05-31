@@ -46,6 +46,8 @@ struct KModalView: View {
 
     let title: String
     let showTitle: Bool
+    let dismissButtonTitle: String
+    let showDismissButton: Bool
     let viewDefinition: any View
     let style: KModalStyle
     let deviceStyleOverrides: [KDeviceType: KModalStyle]
@@ -53,12 +55,16 @@ struct KModalView: View {
     init(
         title: String,
         showTitle: Bool,
+        dismissButtonTitle: String,
+        showDismissButton: Bool,
         viewDefinition: any View,
         style: KModalStyle,
         deviceStyleOverrides: [KDeviceType: KModalStyle]
     ) {
         self.title = title
         self.showTitle = showTitle
+        self.dismissButtonTitle = dismissButtonTitle
+        self.showDismissButton = showDismissButton
         self.viewDefinition = viewDefinition
         self.style = style
         self.deviceStyleOverrides = deviceStyleOverrides
@@ -87,6 +93,8 @@ struct KModalView: View {
             style: style,
             title: title,
             showTitle: showTitle,
+            dismissButtonTitle: dismissButtonTitle,
+            showDismissButton: showDismissButton,
             viewDefinition: viewDefinition,
             deviceStyleOverrides: deviceStyleOverrides
         ))
@@ -119,6 +127,8 @@ private struct ModalPresentation: ViewModifier {
     let style: KModalStyle
     let title: String
     let showTitle: Bool
+    let dismissButtonTitle: String
+    let showDismissButton: Bool
     let viewDefinition: any View
     let deviceStyleOverrides: [KDeviceType: KModalStyle]
 
@@ -131,6 +141,8 @@ private struct ModalPresentation: ViewModifier {
                     isPresented: $isPresented,
                     title: title,
                     showTitle: showTitle,
+                    dismissButtonTitle: dismissButtonTitle,
+                    showDismissButton: showDismissButton,
                     viewDefinition: viewDefinition)
             )
         } else {
@@ -140,6 +152,8 @@ private struct ModalPresentation: ViewModifier {
                     style: resolvedStyle,
                     title: title,
                     showTitle: showTitle,
+                    dismissButtonTitle: dismissButtonTitle,
+                    showDismissButton: showDismissButton,
                     viewDefinition: viewDefinition
                 )
             )
@@ -152,19 +166,23 @@ private struct SheetModal: ViewModifier {
     let style: KModalStyle
     let title: String
     let showTitle: Bool
+    let dismissButtonTitle: String
+    let showDismissButton: Bool
     let viewDefinition: any View
 
     func body(content: Content) -> some View {
         content.sheet(isPresented: $isPresented) {
             VStack {
-                HStack {
-                    Spacer()
-                    Button("Dismiss") {
-                        isPresented = false
+                if showDismissButton {
+                    HStack {
+                        Spacer()
+                        Button(dismissButtonTitle) {
+                            isPresented = false
+                        }
+                        .dynamicTypeSize(.large)
+                        .fixedSize()
+                        .padding([.top, .trailing], 20)
                     }
-                    .dynamicTypeSize(.large)
-                    .fixedSize()
-                    .padding([.top, .trailing], 20)
                 }
                 if showTitle {
                     Text(title)
@@ -182,19 +200,23 @@ private struct FullScreenModal: ViewModifier {
     @Binding var isPresented: Bool
     let title: String
     let showTitle: Bool
+    let dismissButtonTitle: String
+    let showDismissButton: Bool
     let viewDefinition: any View
 
     func body(content: Content) -> some View {
         content.fullScreenCover(isPresented: $isPresented) {
             VStack {
-                HStack {
-                    Spacer()
-                    Button("Dismiss") {
-                        isPresented = false
+                if showDismissButton {
+                    HStack {
+                        Spacer()
+                        Button(dismissButtonTitle) {
+                            isPresented = false
+                        }
+                        .dynamicTypeSize(.large)
+                        .fixedSize()
+                        .padding([.top, .trailing], 20)
                     }
-                    .dynamicTypeSize(.large)
-                    .fixedSize()
-                    .padding([.top, .trailing], 20)
                 }
                 if showTitle {
                     Text(title)

@@ -11,6 +11,8 @@ public struct KContentView: View {
     let showSettings: Bool
     let settingsTitle: String
     let showSettingsTitle: Bool
+    let settingsDismissButtonTitle: String
+    let showSettingsDismissButton: Bool
     let settingsView: (any View)?
     let settingsStyle: KModalStyle
     let settingsDeviceStyleOverrides: [KDeviceType: KModalStyle]
@@ -25,6 +27,8 @@ public struct KContentView: View {
         showSettings: Bool = false,
         settingsTitle: String,
         showSettingsTitle: Bool,
+        settingsDimissbuttonTitle: String,
+        showSettingsDismissButton: Bool,
         settingsStyle: KModalStyle,
         settingsDeviceStyleOverrides: [KDeviceType: KModalStyle],
         loadingView: (any View)? = nil,
@@ -38,6 +42,8 @@ public struct KContentView: View {
         self.showSettings = showSettings
         self.settingsTitle = settingsTitle
         self.showSettingsTitle = showSettingsTitle
+        self.settingsDismissButtonTitle = settingsDimissbuttonTitle
+        self.showSettingsDismissButton = showSettingsDismissButton
         self.settingsView = settingsView
         self.settingsStyle = settingsStyle
         self.settingsDeviceStyleOverrides = settingsDeviceStyleOverrides
@@ -88,6 +94,8 @@ public struct KContentView: View {
                         KModalView(
                             title: settingsTitle,
                             showTitle: showSettingsTitle,
+                            dismissButtonTitle: settingsDismissButtonTitle,
+                            showDismissButton: showSettingsDismissButton,
                             viewDefinition: sv,
                             style: settingsStyle,
                             deviceStyleOverrides: settingsDeviceStyleOverrides)
