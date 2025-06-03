@@ -74,6 +74,7 @@ struct KModalView: View {
         Button(title) {
             modalState.presentAnotherView = true
         }
+        .keyboardShortcut(KeyEquivalent(Character(",")), modifiers: .command)
         .dynamicTypeSize(.large)
         .padding(.leading)
         .padding(.top, topPadding)
