@@ -8,6 +8,7 @@ public struct KContentView: View {
 
     let appName: String
     let showVersion: Bool
+    let showFPS: Bool
     let showSettings: Bool
     let settingsTitle: String
     let showSettingsTitle: Bool
@@ -24,6 +25,7 @@ public struct KContentView: View {
         sysLink: KSysLink,
         appName: String,
         showVersion: Bool = true,
+        showFPS: Bool = false,
         showSettings: Bool = false,
         settingsTitle: String,
         showSettingsTitle: Bool,
@@ -39,6 +41,7 @@ public struct KContentView: View {
         self.appName = appName
         self.sysLink = sysLink
         self.showVersion = showVersion
+        self.showFPS = showFPS
         self.showSettings = showSettings
         self.settingsTitle = settingsTitle
         self.showSettingsTitle = showSettingsTitle
@@ -89,8 +92,8 @@ public struct KContentView: View {
             }
 
             VStack {
-                if showSettings, let sv = settingsView {
-                    HStack {
+                HStack {
+                    if showSettings, let sv = settingsView {
                         KModalView(
                             title: settingsTitle,
                             showTitle: showSettingsTitle,
@@ -99,7 +102,19 @@ public struct KContentView: View {
                             viewDefinition: sv,
                             style: settingsStyle,
                             deviceStyleOverrides: settingsDeviceStyleOverrides)
-                        Spacer()
+                    }
+                    Spacer()
+                    if showFPS && sysLink.frameHandlerReady {
+                        Text("\(String(format: "%.1f", sysLink.currentFPS)) FPS")
+                            .font(Font.system(size: 12).bold().monospaced())
+                            .shadow(
+                                color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
+                                radius: 2,
+                                x: 2,
+                                y: 2)
+                            .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                            .padding()
+                            .allowsHitTesting(false)
                     }
                 }
                 Spacer()

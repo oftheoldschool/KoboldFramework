@@ -26,6 +26,7 @@ open class KoboldApp: NSObject {
     open var preventScreenSleep: Bool { false }
     open var defaultFont: Font? { nil }
     open var colorScheme: ColorScheme? { nil }
+    open var showFPS: Bool { false }
 
     // loading screen config
     open var forceLoadingTimeSeconds: TimeInterval { 3 }
@@ -95,6 +96,7 @@ open class KoboldApp: NSObject {
                 sysLink: sysLink,
                 appName: appName,
                 showVersion: showVersion,
+                showFPS: showFPS,
                 showSettings: showSettings,
                 settingsTitle: settingsTitle,
                 showSettingsTitle: showSettingsTitle,
