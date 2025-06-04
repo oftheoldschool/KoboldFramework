@@ -53,8 +53,6 @@ extension KSysLink: MTKViewDelegate {
             frameCount: frameCount
         )
 
-        kinfo(currentFPS)
-
         let events = eventQueue.dequeueAll()
 
         for event in events {

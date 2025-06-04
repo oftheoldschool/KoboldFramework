@@ -25,6 +25,9 @@ public class KSysLink: NSObject, ObservableObject {
     @Published
     public var currentFPS: Float = 0
 
+    @Published
+    public var showFPSToggle: Bool = true
+
     public var bounds: (width: Int, height: Int)
     public var clearColor: (r: Float, g: Float, b: Float)
     public var colorPixelFormat: MTLPixelFormat

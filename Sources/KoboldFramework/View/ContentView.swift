@@ -104,8 +104,8 @@ public struct KContentView: View {
                             deviceStyleOverrides: settingsDeviceStyleOverrides)
                     }
                     Spacer()
-                    if showFPS && sysLink.frameHandlerReady {
-                        Text("\(String(format: "%.1f", sysLink.currentFPS)) FPS")
+                    if showFPS && sysLink.showFPSToggle && sysLink.frameHandlerReady {
+                        Text("\(String(format: "%.1f", floor(sysLink.currentFPS * 10) / 10)) FPS")
                             .font(Font.system(size: 12).bold().monospaced())
                             .shadow(
                                 color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),

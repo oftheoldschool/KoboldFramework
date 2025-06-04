@@ -8,6 +8,9 @@ open class KoboldApp: NSObject {
     open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { true }
 
+    // fps display config
+    open var showFPS: Bool { false }
+
     // settings config
     open var showSettings: Bool { false }
     open var settingsStyle: KModalStyle { [.medium, .large] }
@@ -26,7 +29,6 @@ open class KoboldApp: NSObject {
     open var preventScreenSleep: Bool { false }
     open var defaultFont: Font? { nil }
     open var colorScheme: ColorScheme? { nil }
-    open var showFPS: Bool { false }
 
     // loading screen config
     open var forceLoadingTimeSeconds: TimeInterval { 3 }
