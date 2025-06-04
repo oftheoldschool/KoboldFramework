@@ -16,6 +16,13 @@ public class KSysLink: NSObject, ObservableObject {
     var lastUpdate: Double = 0
     var applicationFinishedLaunching: Bool = false
 
+    // MARK: - FPS Tracking
+    private var fpsFrameCount: UInt64 = 0
+    private let fpsUpdateInterval: Double = 0.25
+    var fpsUpdateTime: Double = 0
+    var frameCount: UInt64 = 0
+    var currentFPS: Float = 0
+
     public var bounds: (width: Int, height: Int)
     public var clearColor: (r: Float, g: Float, b: Float)
     public var colorPixelFormat: MTLPixelFormat
@@ -73,5 +80,32 @@ public class KSysLink: NSObject, ObservableObject {
     public func resetElapsedTime() {
         self.startTime = 0
         self.lastUpdate = 0
+        self.frameCount = 0
+        self.fpsUpdateTime = 0
+        self.fpsFrameCount = 0
+        self.currentFPS = 0
+    }
+
+    // MARK: - FPS Calculation
+    func updateFPS(currentTime: Double) {
+        frameCount += 1
+        fpsFrameCount += 1
+
+        if currentTime - fpsUpdateTime >= fpsUpdateInterval {
+            let timeElapsed = currentTime - fpsUpdateTime
+            if timeElapsed > 0 {
+                currentFPS = Float(fpsFrameCount) / Float(timeElapsed)
+            }
+            fpsUpdateTime = currentTime
+            fpsFrameCount = 0
+        }
+    }
+
+    public func getCurrentFPS() -> Float {
+        return currentFPS
+    }
+
+    public func getFrameCount() -> UInt64 {
+        return frameCount
     }
 }

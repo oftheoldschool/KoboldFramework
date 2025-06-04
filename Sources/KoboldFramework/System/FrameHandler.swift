@@ -3,6 +3,8 @@ import Foundation
 public struct KFrameData {
     public let elapsedTime: Float
     public let deltaTime: Float
+    public let fps: Float
+    public let frameCount: UInt64
 }
 
 public protocol KFrameHandler: NSObjectProtocol {

@@ -36,6 +36,7 @@ extension KSysLink: MTKViewDelegate {
         var newTime = CACurrentMediaTime()
         if startTime == 0 {
             startTime = newTime
+            fpsUpdateTime = 0
             newTime = 0
         } else {
             newTime = newTime - startTime
@@ -43,9 +44,13 @@ extension KSysLink: MTKViewDelegate {
         let deltaTime = newTime - lastUpdate
         lastUpdate = newTime
 
+        updateFPS(currentTime: newTime)
+
         let frameData = KFrameData(
             elapsedTime: Float(newTime),
-            deltaTime: Float(deltaTime)
+            deltaTime: Float(deltaTime),
+            fps: currentFPS,
+            frameCount: frameCount
         )
 
         let events = eventQueue.dequeueAll()
