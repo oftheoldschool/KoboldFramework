@@ -41,8 +41,7 @@ public struct KModalStyle: OptionSet {
 
 struct KModalView: View {
     @StateObject var modalState = KModalState.shared
-    @State private var isWindowedMode = false
-    @State private var topPadding: CGFloat = 0
+    @StateObject var layoutState = KLayoutState.shared
 
     let title: String
     let showTitle: Bool
@@ -77,16 +76,16 @@ struct KModalView: View {
         .keyboardShortcut(KeyEquivalent(Character(",")), modifiers: .command)
         .dynamicTypeSize(.large)
         .padding(.leading)
-        .padding(.top, topPadding)
+        .padding(.top, layoutState.topPadding)
         .onAppear {
-            checkWindowMode()
+            layoutState.updateTopPadding()
         }
         #if os(macOS)
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification)) { _ in
-            checkWindowMode()
+            layoutState.updateTopPadding()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResizeNotification)) { _ in
-            checkWindowMode()
+            layoutState.updateTopPadding()
         }
         #endif
         .modifier(ModalPresentation(
@@ -99,27 +98,6 @@ struct KModalView: View {
             viewDefinition: viewDefinition,
             deviceStyleOverrides: deviceStyleOverrides
         ))
-    }
-
-    func checkWindowMode() {
-        #if os(macOS)
-        if let window = NSApplication.shared.windows.first(where: { $0.isKeyWindow }) {
-            isWindowedMode = !window.styleMask.contains(.fullScreen)
-            topPadding = isWindowedMode ? 44 : 16
-        }
-        #elseif targetEnvironment(macCatalyst)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            let screen = scene.screen
-            if let window = scene.windows.first {
-                let isFullScreen = abs(window.frame.width - screen.bounds.width) < 1 &&
-                                  abs(window.frame.height - screen.bounds.height) < 1
-                isWindowedMode = !isFullScreen
-                topPadding = isWindowedMode ? 44 : 16
-            }
-        }
-        #else
-        topPadding = 16
-        #endif
     }
 }
 

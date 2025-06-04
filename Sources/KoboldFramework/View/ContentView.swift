@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct KContentView: View {
     @Environment(\.scenePhase) var scenePhase
+    @StateObject private var layoutState = KLayoutState.shared
 
     @ObservedObject
     var sysLink: KSysLink
@@ -59,6 +60,9 @@ public struct KContentView: View {
         appView.edgesIgnoringSafeArea(.all)
             .statusBar(hidden: true)
             .navigationBarHidden(true)
+            .onAppear {
+                layoutState.updateTopPadding()
+            }
             .onChange(of: scenePhase) { (_, newPhase) in
                 switch newPhase {
                 case.active:
@@ -66,6 +70,7 @@ public struct KContentView: View {
                     if preventScreenSleep {
                         UIApplication.shared.isIdleTimerDisabled = true
                     }
+                    layoutState.updateTopPadding()
                 default:
                     sysLink.eventQueue.enqueue(item: .focus(KFocusEvent(state: .inactive)))
                     if preventScreenSleep {
@@ -104,7 +109,7 @@ public struct KContentView: View {
                             deviceStyleOverrides: settingsDeviceStyleOverrides)
                     }
                     Spacer()
-                    if showFPS && sysLink.showFPSToggle && sysLink.frameHandlerReady {
+                    if showFPS && layoutState.showFPSToggle && sysLink.frameHandlerReady {
                         Text("\(String(format: "%.1f", floor(sysLink.currentFPS * 10) / 10)) FPS")
                             .font(Font.system(size: 12).bold().monospaced())
                             .shadow(
@@ -113,12 +118,13 @@ public struct KContentView: View {
                                 x: 2,
                                 y: 2)
                             .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
-                            .padding()
+                            .padding(.trailing)
+                            .padding(.top, layoutState.topPadding)
                             .allowsHitTesting(false)
                     }
                 }
                 Spacer()
-                if showVersion {
+                if showVersion && layoutState.showVersionToggle {
                     HStack {
                         Text("\(appName) \(sysLink.getVersionString())")
                             .font(Font.system(size: 12).bold().monospaced())

@@ -6,9 +6,7 @@ open class KoboldApp: NSObject {
     private(set) public var frameHandler: KFrameHandler?
 
     open var appName: String { "Kobold Framework Demo" }
-    open var showVersion: Bool { true }
-
-    // fps display config
+    open var showVersion: Bool { false }
     open var showFPS: Bool { false }
 
     // settings config
