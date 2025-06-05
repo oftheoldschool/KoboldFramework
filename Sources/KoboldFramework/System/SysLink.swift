@@ -25,6 +25,9 @@ public class KSysLink: NSObject, ObservableObject {
     @Published
     public var currentFPS: Float = 0
 
+    @Published
+    public var currentFrameTimeMs: Float = 0
+
     public var bounds: (width: Int, height: Int)
     public var clearColor: (r: Float, g: Float, b: Float)
     public var colorPixelFormat: MTLPixelFormat
@@ -86,6 +89,7 @@ public class KSysLink: NSObject, ObservableObject {
         self.fpsUpdateTime = 0
         self.fpsFrameCount = 0
         self.currentFPS = 0
+        self.currentFrameTimeMs = 0  // Reset frame time
     }
 
     // MARK: - FPS Calculation
@@ -101,6 +105,13 @@ public class KSysLink: NSObject, ObservableObject {
             fpsUpdateTime = currentTime
             fpsFrameCount = 0
         }
+    }
+
+    // MARK: - Frame Time Update
+    func updateFrameTime(_ frameTimeMs: Float) {
+        // Smooth the frame time using exponential moving average
+        let alpha: Float = 0.1
+        currentFrameTimeMs = alpha * frameTimeMs + (1 - alpha) * currentFrameTimeMs
     }
 
     public func getCurrentFPS() -> Float {

@@ -110,17 +110,28 @@ public struct KContentView: View {
                     }
                     Spacer()
                     if showFPS && layoutState.showFPSToggle && sysLink.frameHandlerReady {
-                        Text("\(String(format: "%.1f", floor(sysLink.currentFPS * 10) / 10)) FPS")
-                            .font(Font.system(size: 12).bold().monospaced())
-                            .shadow(
-                                color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
-                                radius: 2,
-                                x: 2,
-                                y: 2)
-                            .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
-                            .padding(.trailing)
-                            .padding(.top, layoutState.topPadding)
-                            .allowsHitTesting(false)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(String(format: "%.1f", floor(sysLink.currentFPS * 10) / 10)) FPS")
+                                .font(Font.system(size: 12).bold().monospaced())
+                                .shadow(
+                                    color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
+                                    radius: 2,
+                                    x: 2,
+                                    y: 2)
+                                .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+
+                            Text("\(String(format: "%.2f", sysLink.currentFrameTimeMs))ms")
+                                .font(Font.system(size: 12).monospaced())
+                                .shadow(
+                                    color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
+                                    radius: 2,
+                                    x: 2,
+                                    y: 2)
+                                .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                        }
+                        .padding(.trailing)
+                        .padding(.top, layoutState.topPadding)
+                        .allowsHitTesting(false)
                     }
                 }
                 Spacer()

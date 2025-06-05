@@ -33,6 +33,8 @@ extension KSysLink: MTKViewDelegate {
             return
         }
 
+        let frameStartTime = CACurrentMediaTime()  // Start timing
+
         var newTime = CACurrentMediaTime()
         if startTime == 0 {
             startTime = newTime
@@ -45,13 +47,6 @@ extension KSysLink: MTKViewDelegate {
         lastUpdate = newTime
 
         updateFPS(currentTime: newTime)
-
-        let frameData = KFrameData(
-            elapsedTime: Float(newTime),
-            deltaTime: Float(deltaTime),
-            fps: currentFPS,
-            frameCount: frameCount
-        )
 
         let events = eventQueue.dequeueAll()
 
@@ -83,6 +78,20 @@ extension KSysLink: MTKViewDelegate {
         if inputSystem.inputMode.contains(.mouse) {
             inputSystem.mouseState.processInputs(events: events)
         }
+
+        // Calculate frame time before calling handler
+        let frameEndTime = CACurrentMediaTime()
+        let frameTimeMs = Float((frameEndTime - frameStartTime) * 1000)
+
+        let frameData = KFrameData(
+            elapsedTime: Float(newTime),
+            deltaTime: Float(deltaTime),
+            fps: currentFPS,
+            frameCount: frameCount,
+            frameTimeMs: frameTimeMs
+        )
+
+        updateFrameTime(frameTimeMs)
 
         if let handler = self.frameHandler {
             handler.handleFrame(frameData: frameData)

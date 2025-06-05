@@ -5,6 +5,7 @@ public struct KFrameData {
     public let deltaTime: Float
     public let fps: Float
     public let frameCount: UInt64
+    public let frameTimeMs: Float
 }
 
 public protocol KFrameHandler: NSObjectProtocol {
