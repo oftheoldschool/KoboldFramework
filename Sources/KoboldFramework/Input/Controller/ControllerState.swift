@@ -242,6 +242,10 @@ public enum KControllerStateButtonState {
         return self == .began || self == .held
     }
 
+    public func isReleased() -> Bool {
+        return self == .ended
+    }
+
     public func isInactive() -> Bool {
         return self == .none || self == .ended
     }
