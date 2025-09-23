@@ -22,10 +22,7 @@ public class KSysLink: NSObject, ObservableObject {
     var fpsUpdateTime: Double = 0
     public var frameCount: UInt64 = 0
 
-    @Published
     public var currentFPS: Float = 0
-
-    @Published
     public var currentFrameTimeMs: Float = 0
 
     public var bounds: (width: Int, height: Int)

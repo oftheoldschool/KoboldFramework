@@ -6,6 +6,10 @@ public struct KContentView: View {
 
     @ObservedObject
     var sysLink: KSysLink
+    
+    // Pull-based FPS display state
+    @State private var displayFPS: Float = 0
+    @State private var displayFrameTimeMs: Float = 0
 
     let appName: String
     let showVersion: Bool
@@ -111,7 +115,7 @@ public struct KContentView: View {
                     Spacer()
                     if showFPS && layoutState.showFPSToggle && sysLink.frameHandlerReady {
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(String(format: "%.1f", floor(sysLink.currentFPS * 10) / 10)) FPS")
+                            Text("\(String(format: "%.1f", floor(displayFPS * 10) / 10)) FPS")
                                 .font(Font.system(size: 12).bold().monospaced())
                                 .shadow(
                                     color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
@@ -120,7 +124,7 @@ public struct KContentView: View {
                                     y: 2)
                                 .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
 
-                            Text("\(String(format: "%.2f", sysLink.currentFrameTimeMs))ms")
+                            Text("\(String(format: "%.2f", displayFrameTimeMs))ms")
                                 .font(Font.system(size: 12).monospaced())
                                 .shadow(
                                     color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
@@ -132,6 +136,12 @@ public struct KContentView: View {
                         .padding(.trailing)
                         .padding(.top, layoutState.topPadding)
                         .allowsHitTesting(false)
+                        .onAppear {
+                            startFPSTimer()
+                        }
+                        .onDisappear {
+                            stopFPSTimer()
+                        }
                     }
                 }
                 Spacer()
@@ -167,6 +177,22 @@ public struct KContentView: View {
                 maxHeight: .infinity)
             .zIndex(10)
         }
+    }
+    
+    // MARK: - FPS Timer Management
+    @State private var fpsTimer: Timer?
+    
+    private func startFPSTimer() {
+        // Update FPS display at 4Hz (every 0.25 seconds)
+        fpsTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { _ in
+            displayFPS = sysLink.currentFPS
+            displayFrameTimeMs = sysLink.currentFrameTimeMs
+        }
+    }
+    
+    private func stopFPSTimer() {
+        fpsTimer?.invalidate()
+        fpsTimer = nil
     }
 }
 
