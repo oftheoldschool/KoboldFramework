@@ -3,17 +3,15 @@ import SwiftUI
 public struct KContentView: View {
     @Environment(\.scenePhase) var scenePhase
     @StateObject private var layoutState = KLayoutState.shared
+    @StateObject private var screenshotManager = KScreenshotManager()
 
     @ObservedObject
     var sysLink: KSysLink
-    
-    // Pull-based FPS display state
-    @State private var displayFPS: Float = 0
-    @State private var displayFrameTimeMs: Float = 0
 
     let appName: String
     let showVersion: Bool
     let showFPS: Bool
+    let showScreenshotButton: Bool
     let showSettings: Bool
     let settingsTitle: String
     let showSettingsTitle: Bool
@@ -31,6 +29,7 @@ public struct KContentView: View {
         appName: String,
         showVersion: Bool = true,
         showFPS: Bool = false,
+        showScreenshotButton: Bool = false,
         showSettings: Bool = false,
         settingsTitle: String,
         showSettingsTitle: Bool,
@@ -47,6 +46,7 @@ public struct KContentView: View {
         self.sysLink = sysLink
         self.showVersion = showVersion
         self.showFPS = showFPS
+        self.showScreenshotButton = showScreenshotButton
         self.showSettings = showSettings
         self.settingsTitle = settingsTitle
         self.showSettingsTitle = showSettingsTitle
@@ -64,8 +64,10 @@ public struct KContentView: View {
         appView.edgesIgnoringSafeArea(.all)
             .statusBar(hidden: true)
             .navigationBarHidden(true)
+            .environmentObject(screenshotManager)
             .onAppear {
                 layoutState.updateTopPadding()
+                screenshotManager.configure(sysLink: sysLink)
             }
             .onChange(of: scenePhase) { (_, newPhase) in
                 switch newPhase {
@@ -101,7 +103,7 @@ public struct KContentView: View {
             }
 
             VStack {
-                HStack {
+                HStack(alignment: .top) {
                     if showSettings, let sv = settingsView {
                         KModalView(
                             title: settingsTitle,
@@ -113,34 +115,16 @@ public struct KContentView: View {
                             deviceStyleOverrides: settingsDeviceStyleOverrides)
                     }
                     Spacer()
-                    if showFPS && layoutState.showFPSToggle && sysLink.frameHandlerReady {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(String(format: "%.1f", floor(displayFPS * 10) / 10)) FPS")
-                                .font(Font.system(size: 12).bold().monospaced())
-                                .shadow(
-                                    color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
-                                    radius: 2,
-                                    x: 2,
-                                    y: 2)
-                                .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
-
-                            Text("\(String(format: "%.2f", displayFrameTimeMs))ms")
-                                .font(Font.system(size: 12).monospaced())
-                                .shadow(
-                                    color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
-                                    radius: 2,
-                                    x: 2,
-                                    y: 2)
-                                .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                    VStack {
+                        if showFPS && layoutState.showFPSToggle && sysLink.frameHandlerReady {
+                            FPSDisplayView(sysLink: sysLink)
+                                .padding(.trailing)
+                                .padding(.top, layoutState.topPadding)
                         }
-                        .padding(.trailing)
-                        .padding(.top, layoutState.topPadding)
-                        .allowsHitTesting(false)
-                        .onAppear {
-                            startFPSTimer()
-                        }
-                        .onDisappear {
-                            stopFPSTimer()
+                        if showScreenshotButton && layoutState.showScreenshotButtonToggle && sysLink.frameHandlerReady {
+                            KScreenshotButton(style: .compact)
+                                .padding(.trailing)
+                                .padding(.top, !(showFPS && layoutState.showFPSToggle) ? layoutState.topPadding : 8)
                         }
                     }
                 }
@@ -165,10 +149,13 @@ public struct KContentView: View {
             .zIndex(20)
 
             KWrappedUIView {
-                let view = KMetalView(sysLink)
-                view.translatesAutoresizingMaskIntoConstraints = false
-                view.autoResizeDrawable = true
-                return view
+                let metalView = KMetalView(
+                    sysLink: sysLink,
+                    showScreenshotButton: showScreenshotButton)
+                metalView.translatesAutoresizingMaskIntoConstraints = false
+                metalView.autoResizeDrawable = true
+                
+                return metalView
             }
             .frame(
                 minWidth: 0,
@@ -178,12 +165,46 @@ public struct KContentView: View {
             .zIndex(10)
         }
     }
+}
+
+// MARK: - FPS Display View
+struct FPSDisplayView: View {
+    let sysLink: KSysLink
     
-    // MARK: - FPS Timer Management
+    @State private var displayFPS: Float = 0
+    @State private var displayFrameTimeMs: Float = 0
     @State private var fpsTimer: Timer?
     
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text("\(String(format: "%.1f", floor(displayFPS * 10) / 10)) fps")
+                .font(Font.system(size: 12).bold().monospaced())
+                .shadow(
+                    color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
+                    radius: 2,
+                    x: 2,
+                    y: 2)
+                .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+
+            Text("\(String(format: "%.2f", displayFrameTimeMs))ms")
+                .font(Font.system(size: 12).monospaced())
+                .shadow(
+                    color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
+                    radius: 2,
+                    x: 2,
+                    y: 2)
+                .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+        }
+        .allowsHitTesting(false)
+        .onAppear {
+            startFPSTimer()
+        }
+        .onDisappear {
+            stopFPSTimer()
+        }
+    }
+    
     private func startFPSTimer() {
-        // Update FPS display at 4Hz (every 0.25 seconds)
         fpsTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { _ in
             displayFPS = sysLink.currentFPS
             displayFrameTimeMs = sysLink.currentFrameTimeMs
@@ -194,16 +215,4 @@ public struct KContentView: View {
         fpsTimer?.invalidate()
         fpsTimer = nil
     }
-}
-
-struct BackgroundClearView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        DispatchQueue.main.async {
-            view.superview?.superview?.backgroundColor = .clear
-        }
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
 }

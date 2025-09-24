@@ -8,6 +8,7 @@ open class KoboldApp: NSObject {
     open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { false }
     open var showFPS: Bool { false }
+    open var showScreenshotButton: Bool { false }
 
     // settings config
     open var showSettings: Bool { false }
@@ -97,6 +98,7 @@ open class KoboldApp: NSObject {
                 appName: appName,
                 showVersion: showVersion,
                 showFPS: showFPS,
+                showScreenshotButton: showScreenshotButton,
                 showSettings: showSettings,
                 settingsTitle: settingsTitle,
                 showSettingsTitle: showSettingsTitle,

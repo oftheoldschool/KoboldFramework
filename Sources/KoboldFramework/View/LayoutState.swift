@@ -12,6 +12,9 @@ public class KLayoutState: ObservableObject {
     @Published
     public var showVersionToggle: Bool = true
 
+    @Published
+    public var showScreenshotButtonToggle: Bool = true
+
     private init() {}
 
     public func updateTopPadding() {
