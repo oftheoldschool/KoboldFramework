@@ -49,7 +49,7 @@ open class KoboldApp: NSObject {
         KLayoutState.shared.update(
             showFPSToggle: showFPS,
             showVersionToggle: showVersion,
-            showScreenshotButtonToggle: showScreenshotButton
+            showScreenshotButton: showScreenshotButton
         )
 
         DispatchQueue.global(qos: .userInitiated).async { [self] in

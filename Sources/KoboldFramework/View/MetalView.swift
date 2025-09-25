@@ -14,6 +14,8 @@ class KMetalView: MTKView {
 
         if layoutState.showScreenshotButton {
             self.framebufferOnly = false
+        } else {
+            self.framebufferOnly = true
         }
     }
 
