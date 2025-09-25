@@ -11,12 +11,7 @@ class KMetalView: MTKView {
         kdebug("MetalView.init")
         super.init(frame: .zero, device: sysLink.device)
         self.delegate = sysLink
-
-        if layoutState.showScreenshotButton {
-            self.framebufferOnly = false
-        } else {
-            self.framebufferOnly = true
-        }
+        self.framebufferOnly = false
     }
 
     required public init(coder aDecoder: NSCoder) {
