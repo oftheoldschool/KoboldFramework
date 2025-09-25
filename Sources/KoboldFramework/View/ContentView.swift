@@ -111,14 +111,20 @@ public struct KContentView: View {
                     Spacer()
                     VStack {
                         if layoutState.showFPS && sysLink.frameHandlerReady {
-                            FPSDisplayView(sysLink: sysLink)
-                                .padding(.trailing)
-                                .padding(.top, layoutState.topPadding)
+                            HStack {
+                                Spacer()
+                                FPSDisplayView(sysLink: sysLink)
+                                    .padding(.trailing)
+                                    .padding(.top, layoutState.topPadding)
+                            }
                         }
                         if layoutState.showScreenshotButton && sysLink.frameHandlerReady {
-                            KScreenshotButton(style: .compact)
-                                .padding(.trailing)
-                                .padding(.top, !layoutState.showFPS ? layoutState.topPadding : 8)
+                            HStack {
+                                Spacer()
+                                KScreenshotButton(style: .compact)
+                                    .padding(.trailing)
+                                    .padding(.top, !layoutState.showFPS ? layoutState.topPadding : 8)
+                            }
                         }
                     }
                 }
