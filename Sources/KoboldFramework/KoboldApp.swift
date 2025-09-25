@@ -46,6 +46,12 @@ open class KoboldApp: NSObject {
 
     public override required init() {
         super.init()
+        KLayoutState.shared.update(
+            showFPSToggle: showFPS,
+            showVersionToggle: showVersion,
+            showScreenshotButtonToggle: showScreenshotButton
+        )
+
         DispatchQueue.global(qos: .userInitiated).async { [self] in
             setup()
             if forceLoadingTimeSeconds > 0 {

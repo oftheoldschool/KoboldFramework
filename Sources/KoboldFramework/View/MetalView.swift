@@ -1,19 +1,20 @@
 import MetalKit.MTKView
 import KoboldLogging
+import SwiftUI
 
 class KMetalView: MTKView {
+    @ObservedObject private var layoutState = KLayoutState.shared
+
     init(
         sysLink: KSysLink,
-        showScreenshotButton: Bool
     ) {
         kdebug("MetalView.init")
         super.init(frame: .zero, device: sysLink.device)
         self.delegate = sysLink
 
-        if showScreenshotButton {
+        if layoutState.showScreenshotButton {
             self.framebufferOnly = false
         }
-        kdebug("MetalView: framebufferOnly set to false for screenshot support")
     }
 
     required public init(coder aDecoder: NSCoder) {

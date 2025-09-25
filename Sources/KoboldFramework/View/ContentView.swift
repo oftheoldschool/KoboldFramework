@@ -9,9 +9,6 @@ public struct KContentView: View {
     var sysLink: KSysLink
 
     let appName: String
-    let showVersion: Bool
-    let showFPS: Bool
-    let showScreenshotButton: Bool
     let showSettings: Bool
     let settingsTitle: String
     let showSettingsTitle: Bool
@@ -44,9 +41,6 @@ public struct KContentView: View {
     ) {
         self.appName = appName
         self.sysLink = sysLink
-        self.showVersion = showVersion
-        self.showFPS = showFPS
-        self.showScreenshotButton = showScreenshotButton
         self.showSettings = showSettings
         self.settingsTitle = settingsTitle
         self.showSettingsTitle = showSettingsTitle
@@ -116,20 +110,20 @@ public struct KContentView: View {
                     }
                     Spacer()
                     VStack {
-                        if showFPS && layoutState.showFPSToggle && sysLink.frameHandlerReady {
+                        if layoutState.showFPS && sysLink.frameHandlerReady {
                             FPSDisplayView(sysLink: sysLink)
                                 .padding(.trailing)
                                 .padding(.top, layoutState.topPadding)
                         }
-                        if showScreenshotButton && layoutState.showScreenshotButtonToggle && sysLink.frameHandlerReady {
+                        if layoutState.showScreenshotButton && sysLink.frameHandlerReady {
                             KScreenshotButton(style: .compact)
                                 .padding(.trailing)
-                                .padding(.top, !(showFPS && layoutState.showFPSToggle) ? layoutState.topPadding : 8)
+                                .padding(.top, !layoutState.showFPS ? layoutState.topPadding : 8)
                         }
                     }
                 }
                 Spacer()
-                if showVersion && layoutState.showVersionToggle {
+                if layoutState.showVersion {
                     HStack {
                         Text("\(appName) \(sysLink.getVersionString())")
                             .font(Font.system(size: 12).bold().monospaced())
@@ -149,9 +143,7 @@ public struct KContentView: View {
             .zIndex(20)
 
             KWrappedUIView {
-                let metalView = KMetalView(
-                    sysLink: sysLink,
-                    showScreenshotButton: showScreenshotButton)
+                let metalView = KMetalView(sysLink: sysLink)
                 metalView.translatesAutoresizingMaskIntoConstraints = false
                 metalView.autoResizeDrawable = true
                 

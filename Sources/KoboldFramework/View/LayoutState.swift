@@ -7,13 +7,23 @@ public class KLayoutState: ObservableObject {
     public var topPadding: CGFloat = 16
 
     @Published
-    public var showFPSToggle: Bool = true
+    public var showFPS: Bool = true
 
     @Published
-    public var showVersionToggle: Bool = true
+    public var showVersion: Bool = true
 
     @Published
-    public var showScreenshotButtonToggle: Bool = true
+    public var showScreenshotButton: Bool = true
+
+    public func update(
+        showFPSToggle: Bool? = nil,
+        showVersionToggle: Bool? = nil,
+        showScreenshotButtonToggle: Bool? = nil
+    ) {
+        self.showFPS = showFPSToggle ?? self.showFPS
+        self.showVersion = showVersionToggle ?? self.showVersion
+        self.showScreenshotButton = showScreenshotButtonToggle ?? self.showScreenshotButton
+    }
 
     private init() {}
 
