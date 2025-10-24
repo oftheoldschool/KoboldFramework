@@ -7,7 +7,7 @@ class KMetalView: MTKView {
     private var layoutState = KLayoutState.shared
 
     init(
-        sysLink: KSysLink,
+        sysLink: KSysLink
     ) {
         kdebug("MetalView.init")
         super.init(frame: .zero, device: sysLink.device)
