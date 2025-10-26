@@ -12,8 +12,9 @@ public extension Binding {
             get: {
                 TFloat(subject[keyPath: keyPath])
             },
-            set: {
-                subject[keyPath: keyPath] = TInt($0)
+            set: { newValue in
+                let rounded = TFloat(Double(newValue).rounded())
+                subject[keyPath: keyPath] = TInt(rounded)
             }
         )
     }
