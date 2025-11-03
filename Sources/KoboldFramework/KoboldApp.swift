@@ -12,6 +12,7 @@ open class KoboldApp: NSObject {
 
     // settings config
     open var showSettings: Bool { false }
+    open var showSettingsButton: Bool { true }
     open var settingsStyle: KModalStyle { [.medium, .large] }
     open var settingsDeviceStyleOverrides: [KDeviceType: KModalStyle] { [:] }
     open var settingsTitle: String { "Settings" }
@@ -49,7 +50,8 @@ open class KoboldApp: NSObject {
         KLayoutState.shared.update(
             showFPSToggle: showFPS,
             showVersionToggle: showVersion,
-            showScreenshotButton: showScreenshotButton
+            showScreenshotButton: showScreenshotButton,
+            showSettingsButton: showSettingsButton
         )
 
         DispatchQueue.global(qos: .userInitiated).async { [self] in
@@ -106,6 +108,7 @@ open class KoboldApp: NSObject {
                 showFPS: showFPS,
                 showScreenshotButton: showScreenshotButton,
                 showSettings: showSettings,
+                showSettingsButton: showSettingsButton,
                 settingsTitle: settingsTitle,
                 showSettingsTitle: showSettingsTitle,
                 settingsDimissbuttonTitle: settingsDimissButtonTitle,

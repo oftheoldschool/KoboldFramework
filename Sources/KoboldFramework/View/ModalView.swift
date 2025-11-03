@@ -45,6 +45,7 @@ struct KModalView: View {
 
     let title: String
     let showTitle: Bool
+    let showButton: Bool
     let dismissButtonTitle: String
     let showDismissButton: Bool
     let viewDefinition: any View
@@ -54,6 +55,7 @@ struct KModalView: View {
     init(
         title: String,
         showTitle: Bool,
+        showButton: Bool,
         dismissButtonTitle: String,
         showDismissButton: Bool,
         viewDefinition: any View,
@@ -62,6 +64,7 @@ struct KModalView: View {
     ) {
         self.title = title
         self.showTitle = showTitle
+        self.showButton = showButton
         self.dismissButtonTitle = dismissButtonTitle
         self.showDismissButton = showDismissButton
         self.viewDefinition = viewDefinition
@@ -73,6 +76,8 @@ struct KModalView: View {
         Button(title) {
             modalState.presentAnotherView = true
         }
+        .allowsHitTesting(true)
+        .foregroundStyle(showButton && layoutState.showSettingsButton ? Color.accentColor : Color.clear)
         .keyboardShortcut(KeyEquivalent(Character(",")), modifiers: .command)
         .dynamicTypeSize(.large)
         .padding(.leading)

@@ -12,6 +12,7 @@ public struct KContentView: View {
     let showSettings: Bool
     let settingsTitle: String
     let showSettingsTitle: Bool
+    let showSettingsButton: Bool
     let settingsDismissButtonTitle: String
     let showSettingsDismissButton: Bool
     let settingsView: (any View)?
@@ -28,6 +29,7 @@ public struct KContentView: View {
         showFPS: Bool = false,
         showScreenshotButton: Bool = false,
         showSettings: Bool = false,
+        showSettingsButton: Bool = true,
         settingsTitle: String,
         showSettingsTitle: Bool,
         settingsDimissbuttonTitle: String,
@@ -42,6 +44,7 @@ public struct KContentView: View {
         self.appName = appName
         self.sysLink = sysLink
         self.showSettings = showSettings
+        self.showSettingsButton = showSettingsButton
         self.settingsTitle = settingsTitle
         self.showSettingsTitle = showSettingsTitle
         self.settingsDismissButtonTitle = settingsDimissbuttonTitle
@@ -102,6 +105,7 @@ public struct KContentView: View {
                         KModalView(
                             title: settingsTitle,
                             showTitle: showSettingsTitle,
+                            showButton: showSettingsButton,
                             dismissButtonTitle: settingsDismissButtonTitle,
                             showDismissButton: showSettingsDismissButton,
                             viewDefinition: sv,

@@ -15,14 +15,19 @@ public class KLayoutState: ObservableObject {
     @Published
     public var showScreenshotButton: Bool = true
 
+    @Published
+    public var showSettingsButton: Bool = true
+
     public func update(
         showFPSToggle: Bool? = nil,
         showVersionToggle: Bool? = nil,
-        showScreenshotButton: Bool? = nil
+        showScreenshotButton: Bool? = nil,
+        showSettingsButton: Bool? = nil
     ) {
         self.showFPS = showFPSToggle ?? self.showFPS
         self.showVersion = showVersionToggle ?? self.showVersion
         self.showScreenshotButton = showScreenshotButton ?? self.showScreenshotButton
+        self.showSettingsButton = showSettingsButton ?? self.showSettingsButton
     }
 
     private init() {}
