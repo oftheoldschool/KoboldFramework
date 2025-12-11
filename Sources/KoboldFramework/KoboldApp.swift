@@ -33,7 +33,7 @@ open class KoboldApp: NSObject {
     // loading screen config
     open var forceLoadingTimeSeconds: TimeInterval { 3 }
     open var loadingScreenFadeTimeSeconds: TimeInterval { 1 }
-    open var foregroundColor: (r: Float, g: Float, b: Float) = (r: 0.5, g: 1.0, b: 0.5)
+    open var foregroundColor: (r: Float, g: Float, b: Float) { (r: 0.5, g: 1.0, b: 0.5) }
     open var loadingScreenColors: [(r: Float, g: Float, b: Float)] {
         [
             (r: 0.5, g: 0.667, b: 1),
