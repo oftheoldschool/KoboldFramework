@@ -5,18 +5,24 @@ struct BasicLoadingView: View {
     private var isRotating = 0.0
 
     private let title: String
+    private let foregroundColor: Color
     private let gradientColors: [Color]
 
     init(
         title: String,
-        gradientColors: [(r: Float, g: Float, b: Float)] = [
-            (r: 0.5, g: 0.667, b: 1),
-            (r: 0.75, g: 0.334, b: 1),
-        ]
+        foregroundColor: (r: Float, g: Float, b: Float),
+        gradientColors: [(r: Float, g: Float, b: Float)]
     ) {
         self.title = title
+        self.foregroundColor = Color(
+            red: Double(foregroundColor.r),
+            green: Double(foregroundColor.g),
+            blue: Double(foregroundColor.b))
         self.gradientColors = gradientColors.map { color in
-            Color(red: Double(color.r), green: Double(color.g), blue: Double(color.b))
+            Color(
+                red: Double(color.r),
+                green: Double(color.g),
+                blue: Double(color.b))
         }
     }
     
