@@ -35,12 +35,12 @@ struct BasicLoadingView: View {
                 Text(title)
                     .font(.system(size: 48).bold().monospaced())
                     .padding(.bottom)
-                    .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                    .foregroundColor(foregroundColor)
                     .multilineTextAlignment(.center)
                 Image(systemName: "arrow.triangle.2.circlepath.circle")
                     .font(.system(size: 60))
                     .monospaced()
-                    .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                    .foregroundColor(foregroundColor)
                     .rotationEffect(.degrees(isRotating))
                     .onAppear {
                         withAnimation(
@@ -52,7 +52,7 @@ struct BasicLoadingView: View {
                 Text("loading...")
                     .font(.system(size: 36).bold().monospaced())
                     .padding(.top)
-                    .foregroundColor(Color(red:0.5, green: 1.0, blue: 0.5))
+                    .foregroundColor(foregroundColor)
             }
         }
     }
