@@ -33,7 +33,7 @@ class ExampleApp: KoboldApp {
 
 See [KoboldApp.swift](./Sources/KoboldFramework/KoboldApp.swift) for a list of all the open vars and funcs that can be overridden to customise the behaviour.
 
-Of particular note is `override public func createFrameHandler(sysLink: KSysLink) -> KFrameHandler` - KFrameHandler being the protocol for the class that will be executed each frame. The example implementation provided here is [ExampleBasicFrameHandler.swift](./Sources/KoboldFramework/Examples/Basic/ExampleBasicFrameHandler.swift)
+Of particular note is `override public func createFrameHandler(sysLink: KSysLink) -> KFrameHandler` with `KFrameHandler` being the protocol for the class that will be executed each frame. The example implementation provided here is [ExampleBasicFrameHandler.swift](./Sources/KoboldFramework/Examples/Basic/ExampleBasicFrameHandler.swift)
 
 ## Disclaimer
 
