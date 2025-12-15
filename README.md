@@ -10,7 +10,7 @@ Creates a Swift Playground app with a Metal view and basic input support. Very e
 4. Paste the Web Url of this project: `https://github.com/oftheoldschool/KoboldFramework.git` and hit return
 5. When the Package has been resolved, choose 'Add to App Playground'
 6. Delete ContentView.swift, and replace the code in MyApp.swift with the following:
-```
+```swift
 import SwiftUI
 import KoboldFramework
 
