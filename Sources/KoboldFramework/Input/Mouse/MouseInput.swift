@@ -143,7 +143,7 @@ public class KMouseInput: ObservableObject {
                 }
             }
        }
-        self.objectWillChange.send()
+       self.objectWillChange.send()
     }
 
     public func disableMouseInput() {

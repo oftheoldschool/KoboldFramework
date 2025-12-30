@@ -119,7 +119,6 @@ public class KKeyboardInput: ObservableObject {
                 kwarn("No keyboard available to enable")
             }
         }
-        self.objectWillChange.send()
     }
 
     public func disableKeyboardInput() {
@@ -132,7 +131,6 @@ public class KKeyboardInput: ObservableObject {
                 self.activeKeyboard = nil
             }
         }
-        self.objectWillChange.send()
     }
 
     private func setupKeyboardHandlers(_ keyboard: GCKeyboard) {
@@ -151,7 +149,9 @@ public class KKeyboardInput: ObservableObject {
             } else {
                 event = .input(.keyboard(.keyUp(KKeyboardEventKey(keyCode: KKeyboardKeyCode.fromGCKeyCode(keyCode)))))
             }
-            self.eventQueue.enqueue(item: event)
+            DispatchQueue.global(qos: .userInteractive).async {
+                self.eventQueue.enqueue(item: event)
+            }
         }
     }
 

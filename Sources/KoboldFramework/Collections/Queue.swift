@@ -43,17 +43,31 @@ class KQueue<T> {
 
     func dequeueAll() -> [T] {
         semaphore.wait()
-        var events: [T?] = []
-        if first < next {
-            events = Array(items[first..<next])
+        let start = first
+        let end = next
+
+        var result: [T] = []
+        result.reserveCapacity(capacity())
+
+        if start < end {
+            for i in start..<end {
+                if let v = items[i] { result.append(v); items[i] = nil }
+            }
         } else if items[first] != nil {
-            events = Array(items[first..<maxSize] + items[..<next])
+            for i in start..<maxSize {
+                if let v = items[i] { result.append(v); items[i] = nil }
+            }
+            if end > 0 {
+                for i in 0..<end {
+                    if let v = items[i] { result.append(v); items[i] = nil }
+                }
+            }
         }
-        items = ContiguousArray.init(repeating: nil, count: maxSize)
+
         first = 0
         next = 0
         semaphore.signal()
-        return events.compactMap { $0 }
+        return result
     }
 
     func peek() -> T? {
@@ -91,3 +105,4 @@ class KQueue<T> {
         semaphore.signal()
     }
 }
+
