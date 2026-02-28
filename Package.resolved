@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/oftheoldschool/KoboldMathExtensions.git",
       "state" : {
-        "revision" : "9aeb0bb828c3da16270713952fa932cd4c386565",
-        "version" : "0.0.4"
+        "revision" : "22d641455ceddf2257302c2b9a1392b5162a3d48",
+        "version" : "0.0.6"
       }
     }
   ],
