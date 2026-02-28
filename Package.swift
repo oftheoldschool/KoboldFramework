@@ -16,6 +16,9 @@ let package = Package(
             name: "KoboldLogging",
             targets: ["KoboldLogging"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/oftheoldschool/KoboldMathExtensions.git", "0.0.1"..<"1.0.0"),
+    ],
     targets: [
         .target(
             name: "KoboldFramework",
