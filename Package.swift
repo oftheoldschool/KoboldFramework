@@ -12,17 +12,15 @@ let package = Package(
         .library(
             name: "KoboldFramework",
             targets: ["KoboldFramework"]),
-        .library(
-            name: "KoboldLogging",
-            targets: ["KoboldLogging"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/oftheoldschool/KoboldLogging.git", "0.0.1"..<"1.0.0"),
     ],
     targets: [
         .target(
             name: "KoboldFramework",
             dependencies: [
-                "KoboldLogging",
+                .product(name: "KoboldLogging", package: "KoboldLogging"),
             ]),
-        .target(
-            name: "KoboldLogging"),
     ]
 )
