@@ -1,0 +1,15 @@
+{
+  "originHash" : "6bc48f903d9e82fff81db6db38050fa97cba8ed375b40e19f3f9b6f534e3f008",
+  "pins" : [
+    {
+      "identity" : "koboldmathextensions",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/oftheoldschool/KoboldMathExtensions.git",
+      "state" : {
+        "revision" : "15e95d5b50d2dee7668bce81ba99f83f6e8bad65",
+        "version" : "0.0.2"
+      }
+    }
+  ],
+  "version" : 3
+}
