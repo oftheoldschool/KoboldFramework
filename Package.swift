@@ -22,7 +22,10 @@ let package = Package(
     targets: [
         .target(
             name: "KoboldFramework",
-            dependencies: ["KoboldLogging"]),
+            dependencies: [
+                "KoboldLogging",
+                .product(name: "KoboldMathExtensions", package: "KoboldMathExtensions")
+            ]),
         .target(
             name: "KoboldLogging"),
     ]
