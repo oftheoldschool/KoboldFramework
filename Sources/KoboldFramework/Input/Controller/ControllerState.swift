@@ -23,6 +23,19 @@ public class KControllerState {
         rightStick = rightStick.nextState()
     }
 
+    public func reset() {
+        screenButton = KControllerStateTap(
+            state: .none,
+            position: (.zero, .zero))
+        buttonA = .none
+        buttonB = .none
+        buttonX = .none
+        buttonY = .none
+        buttonStart = .none
+        leftStick = KControllerStateStick(state: .none, offset: (x: .zero, y: .zero))
+        rightStick = KControllerStateStick(state: .none, offset: (x: .zero, y: .zero))
+    }
+
     init() {
         screenButton = KControllerStateTap(
             state: .none,
@@ -34,6 +47,7 @@ public class KControllerState {
         buttonStart = .none
         leftStick = KControllerStateStick(state: .none, offset: (x: .zero, y: .zero))
         rightStick = KControllerStateStick(state: .none, offset: (x: .zero, y: .zero))
+        reset()
     }
 
     func processInputs(events: [KEvent]) {

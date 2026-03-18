@@ -13,7 +13,6 @@ public class KControllerInput: ObservableObject {
     private let eventQueue: KQueue<KEvent>
 
     private var controllerObservers: [Any] = []
-    private var currentHandlers: [Any] = []
 
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue
@@ -28,6 +27,30 @@ public class KControllerInput: ObservableObject {
 
     deinit {
         disableController()
+        controllerObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        controllerObservers.removeAll()
+    }
+
+    private func activeWindow() -> UIWindow? {
+        let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let foregroundScenes = windowScenes.filter { $0.activationState == .foregroundActive }
+
+        for scene in foregroundScenes {
+            if let keyWindow = scene.windows.first(where: \.isKeyWindow) {
+                return keyWindow
+            }
+        }
+        for scene in foregroundScenes {
+            if let firstWindow = scene.windows.first {
+                return firstWindow
+            }
+        }
+        for scene in windowScenes {
+            if let keyWindow = scene.windows.first(where: \.isKeyWindow) {
+                return keyWindow
+            }
+        }
+        return windowScenes.first?.windows.first
     }
 
     private func deactivateController(controllerId: String) {
@@ -38,6 +61,9 @@ public class KControllerInput: ObservableObject {
                 disableVirtualControllerView()
             case .physical(let rawController):
                 removeControllerHandlers(rawController)
+            }
+            if activeController?.id == controllerId {
+                activeController = nil
             }
         } else {
             kerror("Received request to deactivate non existent controller: \(controllerId)")
@@ -163,7 +189,7 @@ public class KControllerInput: ObservableObject {
 
             let controllerId = disconnectedController.identifier
             if disconnectedController.name == "Apple Touch Controller" {
-                kerror("Received notification to disconnect Apple Touch Controller disconnected")
+                kerror("Received notification to disconnect Apple Touch Controller")
             } else if allControllers.contains(where: { $0.id == controllerId }) {
                 kinfo("Disconnecting controller \(controllerId) and sending event")
                 deactivateController(controllerId: controllerId)
@@ -203,35 +229,41 @@ public class KControllerInput: ObservableObject {
 
     public func enableControllerById(_ controllerId: String) {
         kinfo("Enabling controller \(controllerId)")
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            guard let controller = allControllers.first(where: { $0.id == controllerId }) else {
-                kerror("Unable to activate controller \(controllerId) - controller not found")
-                return
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.enableControllerById(controllerId)
             }
-
-            if let activeController = activeController,
-                let activeGCController = activeController.gcController
-            {
-                kinfo("Found existing controller: \(activeController.id), disabling it")
-                self.removeControllerHandlers(activeGCController)
-                self.deactivateController(controllerId: activeController.id)
-            }
-
-            kinfo("Activating controller \(controllerId)")
-            self.activatePhysicalController(controller)
+            return
         }
-        self.objectWillChange.send()
+
+        guard let controller = allControllers.first(where: { $0.id == controllerId }) else {
+            kerror("Unable to activate controller \(controllerId) - controller not found")
+            return
+        }
+
+        if let activeController = activeController,
+            let activeGCController = activeController.gcController
+        {
+            kinfo("Found existing controller: \(activeController.id), disabling it")
+            self.removeControllerHandlers(activeGCController)
+            self.deactivateController(controllerId: activeController.id)
+        }
+
+        kinfo("Activating controller \(controllerId)")
+        self.activatePhysicalController(controller)
     }
 
     public func disableController() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            if let activeController = self.activeController {
-                self.deactivateController(controllerId: activeController.id)
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.disableController()
             }
+            return
         }
-        self.objectWillChange.send()
+        if let activeController = self.activeController {
+            self.deactivateController(controllerId: activeController.id)
+        }
+        self.activeController = nil
     }
 
     private func setupControllerHandlers(_ controller: KController) {
@@ -338,8 +370,7 @@ public class KControllerInput: ObservableObject {
     private func enableVirtualControllerView() {
         kinfo("Enabling Virtual Controller View")
         DispatchQueue.main.async {
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = windowScene.windows.first {
+            if let window = self.activeWindow() {
                 func enableControllerView(from view: UIView) {
                     if String(describing: type(of: view)) == "GCControllerView" {
                         kinfo("Enabling GCView")
@@ -365,8 +396,7 @@ public class KControllerInput: ObservableObject {
     private func disableVirtualControllerView() {
         kinfo("Disabling Virtual Controller View")
         DispatchQueue.main.async {
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = windowScene.windows.first {
+            if let window = self.activeWindow() {
                 func removeControllerView(from view: UIView) {
                     if String(describing: type(of: view)) == "GCControllerView" {
                         kinfo("Hiding GCView")
@@ -383,4 +413,3 @@ public class KControllerInput: ObservableObject {
         }
     }
 }
-

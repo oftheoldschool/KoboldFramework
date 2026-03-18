@@ -10,18 +10,24 @@ public enum KMouseEvent {
 }
 
 public struct KMouseEventButton {
-    let button: KMouseButton
+    public let button: KMouseButton
+    public let clickCount: Int
+
+    public init(button: KMouseButton, clickCount: Int = 1) {
+        self.button = button
+        self.clickCount = clickCount
+    }
 }
 
 public struct KMouseEventMove {
-    let deltaX: Float
-    let deltaY: Float
-    let position: CGPoint?
+    public let deltaX: Float
+    public let deltaY: Float
+    public let position: CGPoint?
 }
 
 public struct KMouseEventScroll {
-    let deltaX: Float
-    let deltaY: Float
+    public let deltaX: Float
+    public let deltaY: Float
 }
 
 public enum KMouseButton {
@@ -36,7 +42,6 @@ public enum KMouseButton {
         // GCMouse doesn't provide specific constants for mouse buttons
         // We can identify them by their element names
         let elementName = button.description
-        print("handling other button: \(elementName)")
 
         return switch elementName.lowercased() {
         case "button a", "left button", "primary button": .left

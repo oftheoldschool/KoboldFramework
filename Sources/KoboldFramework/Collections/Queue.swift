@@ -1,108 +1,66 @@
 import Dispatch
 
 class KQueue<T> {
-    private var first: Int
-    private var next: Int
     private let maxSize: Int
-    private var items: ContiguousArray<T?>
+    private var items: [T]
     private let semaphore: DispatchSemaphore
+    private let overflowDropFilter: ((T) -> Bool)?
 
-    init(maxSize: Int, defaultValue: T? = nil) {
+    init(maxSize: Int, overflowDropFilter: ((T) -> Bool)? = nil) {
         self.maxSize = maxSize
-        self.items = ContiguousArray.init(repeating: defaultValue, count: maxSize)
-        self.first = 0
-        self.next = 0
+        self.items = []
+        self.items.reserveCapacity(maxSize)
         self.semaphore = DispatchSemaphore(value: 1)
+        self.overflowDropFilter = overflowDropFilter
     }
 
     func capacity() -> Int {
-        var capacity = 0
-        if next == first && items[first] != nil {
-            capacity = maxSize
-        } else if next >= first {
-            capacity = next - first
-        } else {
-            capacity = next + maxSize - first
-        }
-        return capacity
+        semaphore.wait()
+        defer { semaphore.signal() }
+        return items.count
     }
 
     func dequeue() -> T? {
         semaphore.wait()
-        let item: T? = items[first]
-        if item != nil {
-            items[first] = nil
-            first += 1
-            if first == maxSize {
-                first = 0
-            }
+        defer { semaphore.signal() }
+        guard !items.isEmpty else {
+            return nil
         }
-        semaphore.signal()
-        return item
+        return items.removeFirst()
     }
 
     func dequeueAll() -> [T] {
         semaphore.wait()
-        let start = first
-        let end = next
-
-        var result: [T] = []
-        result.reserveCapacity(capacity())
-
-        if start < end {
-            for i in start..<end {
-                if let v = items[i] { result.append(v); items[i] = nil }
-            }
-        } else if items[first] != nil {
-            for i in start..<maxSize {
-                if let v = items[i] { result.append(v); items[i] = nil }
-            }
-            if end > 0 {
-                for i in 0..<end {
-                    if let v = items[i] { result.append(v); items[i] = nil }
-                }
-            }
-        }
-
-        first = 0
-        next = 0
-        semaphore.signal()
+        defer { semaphore.signal() }
+        let result = items
+        items.removeAll(keepingCapacity: true)
         return result
     }
 
     func peek() -> T? {
         semaphore.wait()
-        let item: T? = items[first]
-        semaphore.signal()
-        return item
+        defer { semaphore.signal() }
+        return items.first
     }
 
     func peekAll() -> [T] {
         semaphore.wait()
-        var events: [T?] = []
-        if first < next {
-            events = Array(items[first..<next])
-        } else if items[first] != nil {
-            events = Array(items[first..<maxSize] + items[..<next])
-        }
-        semaphore.signal()
-        return events.compactMap { $0 }
+        defer { semaphore.signal() }
+        return items
     }
 
     func enqueue(item: T) {
         semaphore.wait()
-        if first == next && items[first] != nil {
-            first += 1
-            if first == maxSize {
-                first = 0
+        defer { semaphore.signal() }
+        if items.count >= maxSize {
+            if let overflowDropFilter = overflowDropFilter,
+                let dropIndex = items.firstIndex(where: overflowDropFilter)
+            {
+                items.remove(at: dropIndex)
+            } else {
+                items.removeFirst()
             }
         }
-        items[next] = item
-        next += 1
-        if next == maxSize {
-            next = 0
-        }
-        semaphore.signal()
+        items.append(item)
     }
 }
-

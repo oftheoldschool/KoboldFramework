@@ -7,6 +7,11 @@ public class KTouchScreenState {
         tapState = KTapState()
     }
 
+    public func reset() {
+        panState.reset()
+        tapState.reset()
+    }
+
     func progressExistingStates() {
         panState.progressExistingStates()
         tapState.progressExistingStates()

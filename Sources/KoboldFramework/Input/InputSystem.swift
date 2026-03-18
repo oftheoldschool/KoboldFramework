@@ -59,7 +59,29 @@ public class KInputSystem: ObservableObject {
         self.mouseState = KMouseState()
     }
 
+    public func resetAllStates() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.resetAllStates()
+            }
+            return
+        }
+        controllerState.reset()
+        touchScreenState.reset()
+        keyboardState.reset()
+        mouseState.reset()
+    }
+
     public func processInputs(events: [KEvent]) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.processInputs(events: events)
+            }
+            return
+        }
+
+        var nextInputMode = inputMode
+
         for event in events {
             switch event {
             case .peripheral(let peripheral):
@@ -72,63 +94,105 @@ public class KInputSystem: ObservableObject {
                         controllerInput.enableControllerById(connectedEvent.identifier)
                     }
                 case .disconnected(let peripheralDisconnectedEvent):
+                    if peripheralDisconnectedEvent.peripheralType == .physicalController {
+                        controllerState.reset()
+                    }
+
                     if peripheralDisconnectedEvent.peripheralType == .physicalController && autoSwitchToVirtualOnDisconnect
                         && controllerInput.allControllers.count == 1
-                        && inputMode.contains(.controller)
+                        && nextInputMode.contains(.controller)
                     {
                         controllerInput.enableDefaultController()
                     }
 
                     if peripheralDisconnectedEvent.peripheralType == .keyboard {
+                        keyboardState.reset()
                         if keyboardInput.connectedKeyboards.isEmpty {
-                            inputMode.remove(.keyboard)
+                            nextInputMode.remove(.keyboard)
+                        }
+                    }
+
+                    if peripheralDisconnectedEvent.peripheralType == .mouse {
+                        mouseState.reset()
+                        if mouseInput.connectedMice.isEmpty {
+                            nextInputMode.remove(.mouse)
                         }
                     }
                 }
             default: continue
             }
         }
+
+        if nextInputMode != inputMode {
+            applyInputMode(nextInputMode)
+        }
     }
 
     public func toggleInputMode(_ inputMode: KInputMode) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.toggleInputMode(inputMode)
+            }
+            return
+        }
         let newInputMode = self.inputMode.symmetricDifference(inputMode)
-        setInputMode(newInputMode)
+        applyInputMode(newInputMode)
     }
 
     public func setInputMode(_ inputMode: KInputMode) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            let previousInputMode = self.inputMode
-
-            if previousInputMode.contains(.controller) {
-                controllerInput.disableController()
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.setInputMode(inputMode)
             }
-            if previousInputMode.contains(.touchscreen) {
-                touchScreenInput.disableTouchInput()
-            }
-            if previousInputMode.contains(.keyboard) {
-                keyboardInput.disableKeyboardInput()
-            }
-            if previousInputMode.contains(.mouse) {
-                mouseInput.disableMouseInput()
-            }
-
-            if inputMode.contains(.controller) {
-                controllerInput.enableDefaultController()
-            }
-            if inputMode.contains(.touchscreen) {
-                touchScreenInput.enableTouchInput()
-            }
-            if inputMode.contains(.keyboard) {
-                keyboardInput.enableKeyboardInput()
-            }
-            if inputMode.contains(.mouse) {
-                mouseInput.enableMouseInput()
-            }
-
-            self.inputMode = inputMode
+            return
         }
-        self.objectWillChange.send()
+        applyInputMode(inputMode)
+    }
+
+    public func setMousePointerMode(_ mode: KMousePointerMode) {
+        mouseInput.setPointerMode(mode)
+    }
+
+    private func applyInputMode(_ inputMode: KInputMode) {
+        let previousInputMode = self.inputMode
+        if previousInputMode == inputMode {
+            return
+        }
+
+        if previousInputMode.contains(.controller) {
+            controllerInput.disableController()
+        }
+        if previousInputMode.contains(.touchscreen) {
+            touchScreenInput.disableTouchInput()
+        }
+        if previousInputMode.contains(.keyboard) {
+            keyboardInput.disableKeyboardInput()
+        }
+        if previousInputMode.contains(.mouse) {
+            mouseInput.disableMouseInput()
+        }
+
+        if inputMode.contains(.controller) {
+            controllerInput.enableDefaultController()
+        } else {
+            controllerState.reset()
+        }
+        if inputMode.contains(.touchscreen) {
+            touchScreenInput.enableTouchInput()
+        } else {
+            touchScreenState.reset()
+        }
+        if inputMode.contains(.keyboard) {
+            keyboardInput.enableKeyboardInput()
+        } else {
+            keyboardState.reset()
+        }
+        if inputMode.contains(.mouse) {
+            mouseInput.enableMouseInput()
+        } else {
+            mouseState.reset()
+        }
+
+        self.inputMode = inputMode
     }
 }
-

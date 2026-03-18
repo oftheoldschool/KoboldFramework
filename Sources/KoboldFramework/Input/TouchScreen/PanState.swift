@@ -10,6 +10,15 @@ public class KPanState {
             absoluteDiff: (x: .zero, y: .zero))
     }
 
+    public func reset() {
+        self.action = KPanAction(
+            state: .none,
+            position: (x: .zero, y: .zero),
+            startPosition: (x: .zero, y: .zero),
+            relativeDiff: (x: .zero, y: .zero),
+            absoluteDiff: (x: .zero, y: .zero))
+    }
+
     func progressExistingStates() {
         action = action.nextAction()
     }

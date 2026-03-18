@@ -45,6 +45,7 @@ open class KoboldApp: NSObject {
     open var defaultInputMode: KInputMode { .none }
     open var autoSwitchToPhysicalOnConnect: Bool { true }
     open var autoSwitchToVirtualOnDisconnect: Bool { true }
+    open var mousePointerMode: KMousePointerMode { .passthrough }
 
     public override required init() {
         super.init()
@@ -55,16 +56,19 @@ open class KoboldApp: NSObject {
             showSettingsButton: showSettingsButton
         )
 
-        DispatchQueue.global(qos: .userInitiated).async { [self] in
+        DispatchQueue.main.async { [self] in
             setup()
+            self.sysLink.inputSystem.setInputMode(defaultInputMode)
+            postSetup()
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
             if forceLoadingTimeSeconds > 0 {
                 sleep(UInt32(forceLoadingTimeSeconds))
             }
             DispatchQueue.main.async { [self] in
                 self.sysLink.frameHandlerReady = true
             }
-            self.sysLink.inputSystem.setInputMode(defaultInputMode)
-            postSetup()
         }
     }
 
@@ -75,12 +79,11 @@ open class KoboldApp: NSObject {
         self.sysLink.inputSystem.inputMode = .none
         self.sysLink.inputSystem.autoSwitchToPhysicalOnConnect = autoSwitchToPhysicalOnConnect
         self.sysLink.inputSystem.autoSwitchToVirtualOnDisconnect = autoSwitchToVirtualOnDisconnect
+        self.sysLink.inputSystem.mouseInput.setPointerMode(mousePointerMode)
         self.sysLink.inputSystem.controllerInput.virtualControllerFadeTime = loadingScreenFadeTimeSeconds
         self.frameHandler = createFrameHandler(sysLink: sysLink)
 
-        DispatchQueue.main.async { [self] in
-            sysLink.registerFrameHandler(self.frameHandler!)
-        }
+        sysLink.registerFrameHandler(self.frameHandler!)
     }
 
     open func postSetup() {

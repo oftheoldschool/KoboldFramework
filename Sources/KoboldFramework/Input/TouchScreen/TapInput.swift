@@ -3,24 +3,57 @@ import UIKit
 
 public class KTapInput {
     let eventQueue: KQueue<KEvent>
+    private weak var registeredView: UIView?
+    private var tapGestureRecognizer: UITapGestureRecognizer?
+    private var doubleTapGestureRecognizer: UITapGestureRecognizer?
+    private var longPressGestureRecognizer: UILongPressGestureRecognizer?
 
     init(eventQueue: KQueue<KEvent>) {
         self.eventQueue = eventQueue
     }
 
     public func registerWithView(view: UIView) {
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGesture))
-        view.addGestureRecognizer(tapGestureRecognizer)
+        if registeredView === view {
+            return
+        }
+        unregisterFromView()
 
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGesture))
         let doubleTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(doubleTapGesture))
         doubleTapGestureRecognizer.numberOfTapsRequired = 2
-        view.addGestureRecognizer(doubleTapGestureRecognizer)
 
         let longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(longPressGesture))
         longPressGestureRecognizer.minimumPressDuration = 0.5
         longPressGestureRecognizer.numberOfTouchesRequired = 1
 
+        view.addGestureRecognizer(tapGestureRecognizer)
+        view.addGestureRecognizer(doubleTapGestureRecognizer)
         view.addGestureRecognizer(longPressGestureRecognizer)
+
+        self.registeredView = view
+        self.tapGestureRecognizer = tapGestureRecognizer
+        self.doubleTapGestureRecognizer = doubleTapGestureRecognizer
+        self.longPressGestureRecognizer = longPressGestureRecognizer
+    }
+
+    public func unregisterFromView() {
+        guard let view = registeredView else {
+            return
+        }
+        if let tapGestureRecognizer = tapGestureRecognizer {
+            view.removeGestureRecognizer(tapGestureRecognizer)
+        }
+        if let doubleTapGestureRecognizer = doubleTapGestureRecognizer {
+            view.removeGestureRecognizer(doubleTapGestureRecognizer)
+        }
+        if let longPressGestureRecognizer = longPressGestureRecognizer {
+            view.removeGestureRecognizer(longPressGestureRecognizer)
+        }
+
+        registeredView = nil
+        tapGestureRecognizer = nil
+        doubleTapGestureRecognizer = nil
+        longPressGestureRecognizer = nil
     }
 
     @objc public func tapGesture(gesture: UITapGestureRecognizer) {

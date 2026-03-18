@@ -26,6 +26,8 @@ public class KKeyboardInput: ObservableObject {
 
     deinit {
         disableKeyboardInput()
+        keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        keyboardObservers.removeAll()
     }
 
     private func addConnectedKeyboards() {
@@ -105,31 +107,37 @@ public class KKeyboardInput: ObservableObject {
 
     public func enableKeyboardInput() {
         kinfo("Enabling keyboard input")
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            if let keyboard = GCKeyboard.coalesced {
-                if !self.connectedKeyboards.contains(where: { $0.description == keyboard.description }) {
-                    self.connectedKeyboards.append(keyboard)
-                }
-
-                self.setupKeyboardHandlers(keyboard)
-                self.activeKeyboard = keyboard
-            } else {
-                kwarn("No keyboard available to enable")
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.enableKeyboardInput()
             }
+            return
+        }
+
+        if let keyboard = GCKeyboard.coalesced {
+            if !self.connectedKeyboards.contains(where: { $0.description == keyboard.description }) {
+                self.connectedKeyboards.append(keyboard)
+            }
+
+            self.setupKeyboardHandlers(keyboard)
+            self.activeKeyboard = keyboard
+        } else {
+            kwarn("No keyboard available to enable")
         }
     }
 
     public func disableKeyboardInput() {
         kinfo("Disabling keyboard input")
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            if let activeKeyboard = self.activeKeyboard {
-                self.removeKeyboardHandlers(activeKeyboard)
-                self.activeKeyboard = nil
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.disableKeyboardInput()
             }
+            return
+        }
+
+        if let activeKeyboard = self.activeKeyboard {
+            self.removeKeyboardHandlers(activeKeyboard)
+            self.activeKeyboard = nil
         }
     }
 
@@ -149,9 +157,7 @@ public class KKeyboardInput: ObservableObject {
             } else {
                 event = .input(.keyboard(.keyUp(KKeyboardEventKey(keyCode: KKeyboardKeyCode.fromGCKeyCode(keyCode)))))
             }
-            DispatchQueue.global(qos: .userInteractive).async {
-                self.eventQueue.enqueue(item: event)
-            }
+            self.eventQueue.enqueue(item: event)
         }
     }
 

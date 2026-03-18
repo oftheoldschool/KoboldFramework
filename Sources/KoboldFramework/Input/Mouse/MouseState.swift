@@ -3,6 +3,7 @@ import CoreGraphics
 
 public class KMouseState {
     private var pressedButtons: Set<KMouseButton> = []
+    private var doublePressedButtons: Set<KMouseButton> = []
     private var heldButtons: Set<KMouseButton> = []
     private var releasedButtons: Set<KMouseButton> = []
     
@@ -17,6 +18,10 @@ public class KMouseState {
     public func isButtonHeld(_ button: KMouseButton) -> Bool {
         return heldButtons.contains(button)
     }
+
+    public func isButtonDoublePressed(_ button: KMouseButton) -> Bool {
+        return doublePressedButtons.contains(button)
+    }
     
     public func isButtonPressedOrHeld(_ button: KMouseButton) -> Bool {
         return isButtonPressed(button) || isButtonHeld(button)
@@ -26,8 +31,11 @@ public class KMouseState {
         return releasedButtons.contains(button)
     }
     
-    public func buttonDown(_ button: KMouseButton) {
+    public func buttonDown(_ button: KMouseButton, clickCount: Int = 1) {
         pressedButtons.insert(button)
+        if clickCount >= 2 {
+            doublePressedButtons.insert(button)
+        }
     }
     
     public func buttonUp(_ button: KMouseButton) {
@@ -49,12 +57,23 @@ public class KMouseState {
     public func mouseScroll(deltaX: Float, deltaY: Float) {
         scrollDelta = CGPoint(x: CGFloat(deltaX), y: CGFloat(deltaY))
     }
+
+    public func reset() {
+        pressedButtons.removeAll()
+        doublePressedButtons.removeAll()
+        heldButtons.removeAll()
+        releasedButtons.removeAll()
+        position = .zero
+        deltaPosition = .zero
+        scrollDelta = .zero
+    }
     
     func progressExistingStates() {
         if !pressedButtons.isEmpty {
             heldButtons = heldButtons.union(pressedButtons)
         }
         pressedButtons.removeAll()
+        doublePressedButtons.removeAll()
         releasedButtons.removeAll()
         deltaPosition = .zero
         scrollDelta = .zero
@@ -70,7 +89,7 @@ public class KMouseState {
                 case .mouse(let mouseEvent):
                     switch mouseEvent {
                     case .buttonDown(let buttonEvent):
-                        buttonDown(buttonEvent.button)
+                        buttonDown(buttonEvent.button, clickCount: buttonEvent.clickCount)
                     case .buttonUp(let buttonEvent):
                         buttonUp(buttonEvent.button)
                     case .move(let moveEvent):

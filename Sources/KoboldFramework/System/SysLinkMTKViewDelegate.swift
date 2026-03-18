@@ -49,6 +49,7 @@ extension KSysLink: MTKViewDelegate {
         updateFPS(currentTime: newTime)
 
         let events = eventQueue.dequeueAll()
+        var didReceiveInactiveFocus = false
 
         for event in events {
             if case let .resize(r) = event {
@@ -56,6 +57,9 @@ extension KSysLink: MTKViewDelegate {
                     width: Int(r.width),
                     height: Int(r.height))
             } else if case let .focus(focusEvent) = event {
+                if focusEvent.state == .inactive {
+                    didReceiveInactiveFocus = true
+                }
                 frameHandler?.handleFocusChange(
                     active: focusEvent.state == .active)
             }
@@ -63,20 +67,26 @@ extension KSysLink: MTKViewDelegate {
 
         inputSystem.processInputs(events: events)
 
-        if inputSystem.inputMode.contains(.controller) {
-            inputSystem.controllerState.processInputs(events: events)
+        if didReceiveInactiveFocus {
+            inputSystem.resetAllStates()
         }
 
-        if inputSystem.inputMode.contains(.touchscreen) {
-            inputSystem.touchScreenState.processInputs(events: events)
-        }
+        if !didReceiveInactiveFocus {
+            if inputSystem.inputMode.contains(.controller) {
+                inputSystem.controllerState.processInputs(events: events)
+            }
 
-        if inputSystem.inputMode.contains(.keyboard) {
-            inputSystem.keyboardState.processInputs(events: events)
-        }
+            if inputSystem.inputMode.contains(.touchscreen) {
+                inputSystem.touchScreenState.processInputs(events: events)
+            }
 
-        if inputSystem.inputMode.contains(.mouse) {
-            inputSystem.mouseState.processInputs(events: events)
+            if inputSystem.inputMode.contains(.keyboard) {
+                inputSystem.keyboardState.processInputs(events: events)
+            }
+
+            if inputSystem.inputMode.contains(.mouse) {
+                inputSystem.mouseState.processInputs(events: events)
+            }
         }
 
         // Calculate frame time before calling handler

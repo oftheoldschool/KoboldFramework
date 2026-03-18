@@ -31,6 +31,12 @@ public class KKeyboardState {
         releasedKeys.insert(keyCode)
     }
 
+    public func reset() {
+        pressedKeys.removeAll()
+        heldKeys.removeAll()
+        releasedKeys.removeAll()
+    }
+
     func progressExistingStates() {
         if !pressedKeys.isEmpty {
             heldKeys = heldKeys.union(pressedKeys)

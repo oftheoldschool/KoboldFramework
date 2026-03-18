@@ -11,6 +11,16 @@ public class KTapState {
             absoluteDiff: (x: .zero, y: .zero))
     }
 
+    public func reset() {
+        self.state = KTapAction(
+            state: .none,
+            type: .tap,
+            position: (x: .zero, y: .zero),
+            startPosition: (x: .zero, y: .zero),
+            relativeDiff: (x: .zero, y: .zero),
+            absoluteDiff: (x: .zero, y: .zero))
+    }
+
     func progressExistingStates() {
         state = state.nextState()
     }
@@ -84,7 +94,7 @@ public enum KTapActionState {
 
 
 public struct KTapAction {
-    public let state: KPanActionState
+    public let state: KTapActionState
     public let type: KTapActionType
     public let position: (x: Float, y: Float)
     public let startPosition: (x: Float, y: Float)

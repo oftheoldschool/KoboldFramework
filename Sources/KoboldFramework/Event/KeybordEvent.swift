@@ -7,7 +7,7 @@ public enum KKeyboardEvent {
 }
 
 public struct KKeyboardEventKey {
-    let keyCode: KKeyboardKeyCode
+    public let keyCode: KKeyboardKeyCode
 }
 
 public enum KKeyboardKeyCode {

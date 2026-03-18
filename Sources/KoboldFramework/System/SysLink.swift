@@ -39,9 +39,46 @@ public class KSysLink: NSObject, ObservableObject {
     @Published
     public var frameHandlerReady: Bool = false
 
+    private static func canDropEventOnQueueOverflow(_ event: KEvent) -> Bool {
+        switch event {
+        case .focus, .resize, .peripheral:
+            return false
+        case .input(let inputEvent):
+            switch inputEvent {
+            case .controller(let controllerEvent):
+                switch controllerEvent {
+                case .button(let buttonEvent):
+                    return buttonEvent.state != .released
+                case .screenTap(let tapEvent):
+                    return tapEvent.state != .released
+                case .stick(let stickEvent):
+                    return stickEvent.state == .changed
+                }
+            case .pan(let panEvent):
+                return panEvent.state == .panning
+            case .tap(let tapEvent):
+                return tapEvent.state != .ended
+            case .keyboard(let keyboardEvent):
+                if case .keyUp = keyboardEvent {
+                    return false
+                }
+                return true
+            case .mouse(let mouseEvent):
+                switch mouseEvent {
+                case .buttonUp:
+                    return false
+                case .buttonDown, .move, .scroll:
+                    return true
+                }
+            }
+        }
+    }
+
     // MARK: - Init
     override init() {
-        let eventQueue = KQueue<KEvent>(maxSize: 2048)
+        let eventQueue = KQueue<KEvent>(
+            maxSize: 2048,
+            overflowDropFilter: Self.canDropEventOnQueueOverflow)
         self.fileSystem = KFileSystem()
         self.inputSystem = KInputSystem(eventQueue: eventQueue)
         self.device = MTLCreateSystemDefaultDevice()!
