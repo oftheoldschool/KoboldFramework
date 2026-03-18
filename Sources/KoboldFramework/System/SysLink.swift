@@ -100,6 +100,13 @@ public class KSysLink: NSObject, ObservableObject {
     }
 
     public func registerFrameHandler(_ frameHandler: KFrameHandler) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.registerFrameHandler(frameHandler)
+            }
+            return
+        }
+
         self.frameHandler = frameHandler
         eventQueue.enqueue(
             item: .resize(

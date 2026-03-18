@@ -56,19 +56,16 @@ open class KoboldApp: NSObject {
             showSettingsButton: showSettingsButton
         )
 
-        DispatchQueue.main.async { [self] in
-            setup()
-            self.sysLink.inputSystem.setInputMode(defaultInputMode)
-            postSetup()
-        }
-
         DispatchQueue.global(qos: .userInitiated).async { [self] in
+            setup()
             if forceLoadingTimeSeconds > 0 {
                 sleep(UInt32(forceLoadingTimeSeconds))
             }
             DispatchQueue.main.async { [self] in
                 self.sysLink.frameHandlerReady = true
             }
+            self.sysLink.inputSystem.setInputMode(defaultInputMode)
+            postSetup()
         }
     }
 
@@ -76,7 +73,7 @@ open class KoboldApp: NSObject {
         self.sysLink.clearColor = clearColor
         self.sysLink.colorPixelFormat = colorPixelFormat
         self.sysLink.depthStencilPixelFormat = depthStencilPixelFormat
-        self.sysLink.inputSystem.inputMode = .none
+        self.sysLink.inputSystem.setInputMode(.none)
         self.sysLink.inputSystem.autoSwitchToPhysicalOnConnect = autoSwitchToPhysicalOnConnect
         self.sysLink.inputSystem.autoSwitchToVirtualOnDisconnect = autoSwitchToVirtualOnDisconnect
         self.sysLink.inputSystem.mouseInput.setPointerMode(mousePointerMode)
