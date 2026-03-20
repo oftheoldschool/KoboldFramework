@@ -60,26 +60,38 @@ public class KInputSystem: ObservableObject {
     }
 
     public func resetAllStates() {
-        if !Thread.isMainThread {
-            DispatchQueue.main.async { [weak self] in
-                self?.resetAllStates()
-            }
+        if Thread.isMainThread {
+            resetAllStatesOnMain()
             return
         }
+        DispatchQueue.main.sync { [weak self] in
+            self?.resetAllStatesOnMain()
+        }
+    }
+
+    public func processInputs(events: [KEvent]) {
+        guard events.contains(where: isPeripheralEvent) else {
+            return
+        }
+
+        if Thread.isMainThread {
+            processPeripheralEventsOnMain(events: events)
+            return
+        }
+
+        DispatchQueue.main.sync { [weak self] in
+            self?.processPeripheralEventsOnMain(events: events)
+        }
+    }
+
+    private func resetAllStatesOnMain() {
         controllerState.reset()
         touchScreenState.reset()
         keyboardState.reset()
         mouseState.reset()
     }
 
-    public func processInputs(events: [KEvent]) {
-        if !Thread.isMainThread {
-            DispatchQueue.main.async { [weak self] in
-                self?.processInputs(events: events)
-            }
-            return
-        }
-
+    private func processPeripheralEventsOnMain(events: [KEvent]) {
         var nextInputMode = inputMode
 
         for event in events {
@@ -126,6 +138,13 @@ public class KInputSystem: ObservableObject {
         if nextInputMode != inputMode {
             applyInputMode(nextInputMode)
         }
+    }
+
+    private func isPeripheralEvent(_ event: KEvent) -> Bool {
+        if case .peripheral = event {
+            return true
+        }
+        return false
     }
 
     public func toggleInputMode(_ inputMode: KInputMode) {
