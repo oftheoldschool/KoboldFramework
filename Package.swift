@@ -1,6 +1,18 @@
 // swift-tools-version: 5.10
 
+import Foundation
 import PackageDescription
+
+// When this package is consumed as a path dep alongside a sibling KoboldLogging
+// path dep (i.e., both vendored under a parent's Sources/Vendored/), prefer the
+// sibling so SwiftPM doesn't see a duplicate identity from a GitHub-URL ref.
+// Otherwise (consumed via the GitHub URL itself, or built standalone), keep the
+// canonical URL dep.
+let koboldLoggingSibling = "../KoboldLogging"
+let koboldLoggingDep: Package.Dependency =
+    FileManager.default.fileExists(atPath: "\(koboldLoggingSibling)/Package.swift")
+        ? .package(path: koboldLoggingSibling)
+        : .package(url: "https://github.com/oftheoldschool/KoboldLogging.git", "0.0.1"..<"1.0.0")
 
 let package = Package(
     name: "KoboldFramework",
@@ -14,7 +26,7 @@ let package = Package(
             targets: ["KoboldFramework"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/oftheoldschool/KoboldLogging.git", "0.0.1"..<"1.0.0"),
+        koboldLoggingDep,
     ],
     targets: [
         .target(
