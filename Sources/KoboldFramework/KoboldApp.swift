@@ -8,6 +8,8 @@ open class KoboldApp: NSObject {
     open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { false }
     open var showFPS: Bool { false }
+    open var showAppMemory: Bool { false }
+    open var showGPUMemory: Bool { false }
     open var showScreenshotButton: Bool { false }
 
     // settings config
@@ -51,6 +53,8 @@ open class KoboldApp: NSObject {
         super.init()
         KLayoutState.shared.update(
             showFPSToggle: showFPS,
+            showAppMemoryToggle: showAppMemory,
+            showGPUMemoryToggle: showGPUMemory,
             showVersionToggle: showVersion,
             showScreenshotButton: showScreenshotButton,
             showSettingsButton: showSettingsButton

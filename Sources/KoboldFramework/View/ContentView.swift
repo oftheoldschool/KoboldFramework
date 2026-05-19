@@ -113,7 +113,7 @@ public struct KContentView: View {
                             deviceStyleOverrides: settingsDeviceStyleOverrides)
                     }
                     Spacer()
-                    VStack {
+                    VStack(spacing: 0) {
                         if layoutState.showFPS && sysLink.frameHandlerReady {
                             HStack {
                                 Spacer()
@@ -122,12 +122,24 @@ public struct KContentView: View {
                                     .padding(.top, layoutState.topPadding)
                             }
                         }
+                        if (layoutState.showAppMemory || layoutState.showGPUMemory) && sysLink.frameHandlerReady {
+                            HStack {
+                                Spacer()
+                                MemoryDisplayView(
+                                    sysLink: sysLink,
+                                    showAppMemory: layoutState.showAppMemory,
+                                    showGPUMemory: layoutState.showGPUMemory)
+                                    .padding(.trailing)
+                                    .padding(.top, !layoutState.showFPS ? layoutState.topPadding : 2)
+                            }
+                        }
                         if layoutState.showScreenshotButton && sysLink.frameHandlerReady {
+                            let anyOverlayAbove = layoutState.showFPS || layoutState.showAppMemory || layoutState.showGPUMemory
                             HStack {
                                 Spacer()
                                 KScreenshotButton(style: .compact)
                                     .padding(.trailing)
-                                    .padding(.top, !layoutState.showFPS ? layoutState.topPadding : 8)
+                                    .padding(.top, !anyOverlayAbove ? layoutState.topPadding : 8)
                             }
                         }
                     }
@@ -216,5 +228,76 @@ struct FPSDisplayView: View {
     private func stopFPSTimer() {
         fpsTimer?.invalidate()
         fpsTimer = nil
+    }
+}
+
+// MARK: - Memory Display View
+struct MemoryDisplayView: View {
+    let sysLink: KSysLink
+    let showAppMemory: Bool
+    let showGPUMemory: Bool
+
+    @State private var stats: KMemoryStats = KMemoryStats(
+        appUsedBytes: 0,
+        appAvailableBytes: 0,
+        gpuAllocatedBytes: 0,
+        gpuBudgetBytes: 0)
+    @State private var memoryTimer: Timer?
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            if showAppMemory {
+                metricLine(label: "app", usedBytes: stats.appUsedBytes)
+            }
+            if showGPUMemory {
+                metricLine(label: "gpu", usedBytes: stats.gpuAllocatedBytes)
+            }
+        }
+        .allowsHitTesting(false)
+        .onAppear {
+            sample()
+            startTimer()
+        }
+        .onDisappear {
+            stopTimer()
+        }
+    }
+
+    @ViewBuilder
+    private func metricLine(label: String, usedBytes: UInt64) -> some View {
+        Text("\(label) \(format(usedBytes))")
+            .font(Font.system(size: 12).monospaced())
+            .shadow(
+                color: Color(red: 0, green: 0, blue: 0, opacity: 0.8),
+                radius: 2,
+                x: 2,
+                y: 2)
+            .foregroundColor(Color(red: 0.5, green: 1.0, blue: 0.5))
+    }
+
+    private func format(_ bytes: UInt64) -> String {
+        let mb = Double(bytes) / (1024.0 * 1024.0)
+        if mb >= 1000 {
+            return String(format: "%.1f GB", mb / 1024.0)
+        } else if mb >= 100 {
+            return String(format: "%.0f MB", mb)
+        } else {
+            return String(format: "%.1f MB", mb)
+        }
+    }
+
+    private func sample() {
+        stats = KMemoryStats.current(device: sysLink.device)
+    }
+
+    private func startTimer() {
+        memoryTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+            sample()
+        }
+    }
+
+    private func stopTimer() {
+        memoryTimer?.invalidate()
+        memoryTimer = nil
     }
 }

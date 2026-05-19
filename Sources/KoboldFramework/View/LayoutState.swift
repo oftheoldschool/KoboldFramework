@@ -10,6 +10,12 @@ public class KLayoutState: ObservableObject {
     public var showFPS: Bool = true
 
     @Published
+    public var showAppMemory: Bool = false
+
+    @Published
+    public var showGPUMemory: Bool = false
+
+    @Published
     public var showVersion: Bool = true
 
     @Published
@@ -20,11 +26,15 @@ public class KLayoutState: ObservableObject {
 
     public func update(
         showFPSToggle: Bool? = nil,
+        showAppMemoryToggle: Bool? = nil,
+        showGPUMemoryToggle: Bool? = nil,
         showVersionToggle: Bool? = nil,
         showScreenshotButton: Bool? = nil,
         showSettingsButton: Bool? = nil
     ) {
         self.showFPS = showFPSToggle ?? self.showFPS
+        self.showAppMemory = showAppMemoryToggle ?? self.showAppMemory
+        self.showGPUMemory = showGPUMemoryToggle ?? self.showGPUMemory
         self.showVersion = showVersionToggle ?? self.showVersion
         self.showScreenshotButton = showScreenshotButton ?? self.showScreenshotButton
         self.showSettingsButton = showSettingsButton ?? self.showSettingsButton
