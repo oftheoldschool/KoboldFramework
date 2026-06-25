@@ -172,6 +172,30 @@ public class KInputSystem: ObservableObject {
         mouseInput.setPointerMode(mode)
     }
 
+    /// Enables/disables the on-screen virtual controller at runtime. When the
+    /// controller input mode is active it brings the virtual controller up (if no
+    /// physical one is active) or tears it down immediately.
+    public func setVirtualControllerAllowed(_ allowed: Bool) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.setVirtualControllerAllowed(allowed)
+            }
+            return
+        }
+        controllerInput.allowVirtualController = allowed
+        if allowed {
+            // Create + connect the on-screen controller (no-op if already present),
+            // then activate it if the controller mode is on and nothing else is.
+            controllerInput.ensureVirtualController()
+            if inputMode.contains(.controller), controllerInput.activeController == nil {
+                controllerInput.enableDefaultController()
+            }
+        } else {
+            // Fully tear it down so its view disappears (not just deactivate).
+            controllerInput.removeVirtualController()
+        }
+    }
+
     private func applyInputMode(_ inputMode: KInputMode) {
         let previousInputMode = self.inputMode
         if previousInputMode == inputMode {

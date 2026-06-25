@@ -1,3 +1,4 @@
+import Foundation
 import GameController
 import KoboldLogging
 
@@ -9,6 +10,25 @@ public class KControllerInput: ObservableObject {
     public var activeController: KController?
 
     public var virtualControllerFadeTime: TimeInterval = 0
+    private var virtualControllerConnectAttempts: Int = 0
+    private let maxVirtualControllerConnectAttempts: Int = 6
+
+    /// When false, the on-screen virtual controller is not created/connected (so it
+    /// never appears) and is never auto-selected as the default controller. A
+    /// physical controller can still be activated normally. Defaults to false on a
+    /// Mac Catalyst / "iPad app on Mac", where a keyboard/mouse is expected.
+    /// Toggle at runtime via `KInputSystem.setVirtualControllerAllowed`.
+    public var allowVirtualController: Bool = !ProcessInfo.processInfo.isMacCatalystApp
+
+    /// A real (non-virtual) controller is connected.
+    public var hasPhysicalController: Bool {
+        allControllers.contains { !$0.isVirtual }
+    }
+
+    /// The on-screen virtual controller is the currently-active controller.
+    public var isVirtualControllerActive: Bool {
+        activeController?.isVirtual ?? false
+    }
 
     private let eventQueue: KQueue<KEvent>
 
@@ -18,6 +38,7 @@ public class KControllerInput: ObservableObject {
         self.eventQueue = eventQueue
         self.virtualController = nil
 
+        kinfo("Controller input runtime: isMacCatalystApp=\(ProcessInfo.processInfo.isMacCatalystApp), allowVirtualController=\(allowVirtualController)")
         kinfo("Adding controllers")
         addConnectedControllers()
 
@@ -70,9 +91,17 @@ public class KControllerInput: ObservableObject {
         }
     }
 
+    /// Creates and connects the on-screen virtual controller, unless it is
+    /// disallowed (e.g. on a Mac) — in which case it's never created, so its view
+    /// never appears. Runs its work on the main thread (synchronously if already
+    /// there, so a runtime enable can activate it immediately afterwards).
     private func createVirtualController() {
+        guard allowVirtualController else {
+            kinfo("Virtual controller disallowed; not creating")
+            return
+        }
         kinfo("Creating virtual controller")
-        DispatchQueue.main.async { [weak self] in
+        let work = { [weak self] in
             guard let self = self else { return }
             let virtualControllerExists = allControllers.contains(where: { $0.isVirtual })
             if virtualControllerExists {
@@ -92,9 +121,32 @@ public class KControllerInput: ObservableObject {
                 newVirtualController.connect { error in
                     if let error = error {
                         kerror("Failed to connect virtual controller: \(error.localizedDescription)")
+                        DispatchQueue.main.async { [weak self] in
+                            guard let self = self else { return }
+                            if let activeController = self.activeController,
+                                activeController.id == newVirtualController.identifier
+                            {
+                                self.deactivateController(controllerId: activeController.id)
+                            }
+                            self.allControllers.removeAll(where: { $0.id == newVirtualController.identifier })
+                            if self.virtualController?.identifier == newVirtualController.identifier {
+                                self.virtualController = nil
+                            }
+                            if self.allowVirtualController,
+                                self.virtualControllerConnectAttempts < self.maxVirtualControllerConnectAttempts
+                            {
+                                self.virtualControllerConnectAttempts += 1
+                                let retryDelay = 0.5 * Double(self.virtualControllerConnectAttempts)
+                                kinfo("Retrying virtual controller connect in \(retryDelay)s (attempt \(self.virtualControllerConnectAttempts)/\(self.maxVirtualControllerConnectAttempts))")
+                                DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) { [weak self] in
+                                    self?.createVirtualController()
+                                }
+                            }
+                        }
                         return
                     } else {
                         kinfo("Successfully connected virtual controller")
+                        self.virtualControllerConnectAttempts = 0
                     }
                 }
                 virtualController = newVirtualController
@@ -108,10 +160,49 @@ public class KControllerInput: ObservableObject {
                 eventQueue.enqueue(
                     item: .peripheral(.connected(connectedEvent)))
 
-                kinfo("Disabling virtual controller view")
-                disableVirtualControllerView()
+                if self.activeController == nil {
+                    kinfo("Activating newly created virtual controller")
+                    self.enableControllerById(newVirtualController.identifier)
+                }
+
+                if self.activeController?.isVirtual ?? false {
+                    kinfo("Keeping virtual controller view enabled for the active controller")
+                    enableVirtualControllerView()
+                } else {
+                    kinfo("Virtual controller created but not active; hiding its view")
+                    disableVirtualControllerView()
+                }
             }
         }
+        if Thread.isMainThread {
+            work()
+        } else {
+            DispatchQueue.main.async(execute: work)
+        }
+    }
+
+    /// Tears down the on-screen virtual controller (deactivating it first if it is
+    /// the active controller), so its view disappears. Used when the virtual
+    /// controller is disabled at runtime.
+    func removeVirtualController() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in self?.removeVirtualController() }
+            return
+        }
+        guard let controller = virtualController else { return }
+        if activeController?.isVirtual ?? false {
+            deactivateController(controllerId: controller.identifier)
+        }
+        disableVirtualControllerView()
+        controller.disconnect()
+        allControllers.removeAll(where: { $0.isVirtual })
+        virtualController = nil
+    }
+
+    /// Creates the virtual controller on demand if allowed and not already present
+    /// (e.g. when re-enabled at runtime).
+    func ensureVirtualController() {
+        createVirtualController()
     }
 
     private func addConnectedControllers() {
@@ -222,7 +313,14 @@ public class KControllerInput: ObservableObject {
     }
 
     public func enableDefaultController() {
-        if let defaultController = allControllers.sorted(by: { (a, b) in !a.isVirtual && b.isVirtual }).first {
+        // Prefer a physical controller; only fall back to the virtual one when it
+        // is allowed. With it disallowed and no physical controller, nothing is
+        // activated (keyboard/touch input is unaffected).
+        let sorted = allControllers.sorted(by: { (a, b) in !a.isVirtual && b.isVirtual })
+        let defaultController = allowVirtualController
+            ? sorted.first
+            : sorted.first(where: { !$0.isVirtual })
+        if let defaultController {
             enableControllerById(defaultController.id)
         }
     }
