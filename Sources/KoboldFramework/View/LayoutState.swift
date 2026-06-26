@@ -1,4 +1,5 @@
 import SwiftUI
+import Metal
 
 public class KLayoutState: ObservableObject {
     public static let shared = KLayoutState()
@@ -23,6 +24,24 @@ public class KLayoutState: ObservableObject {
 
     @Published
     public var showSettingsButton: Bool = true
+
+    /// When true, screenshots include the game HUD (annotations, orbit progress,
+    /// dialog, title). Default on.
+    @Published
+    public var screenshotIncludeHUD: Bool = true
+
+    /// When true, screenshots include the pause/status menu overlay. Default off.
+    @Published
+    public var screenshotIncludeMenu: Bool = false
+
+    /// Transient flag set only for the duration of a screenshot capture draw so
+    /// the renderer can filter overlay layers for that single frame.
+    public var screenshotPassActive: Bool = false
+
+    /// The exact drawable texture rendered by the screenshot-capture frame,
+    /// handed off by the graphics system so the screenshot manager reads the
+    /// freshly-rendered (filtered) frame instead of a rotated pooled drawable.
+    public var screenshotTexture: MTLTexture?
 
     public func update(
         showFPSToggle: Bool? = nil,

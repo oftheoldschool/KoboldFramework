@@ -28,11 +28,30 @@ public class KScreenshotManager: ObservableObject {
             return nil
         }
         
+        // Flag this single forced draw as a screenshot pass so the renderer can
+        // filter overlay layers (e.g. hide the pause menu, keep the HUD) for it.
+        // The renderer renders the filtered frame, waits for GPU completion, and
+        // hands back the exact drawable texture via KLayoutState.screenshotTexture
+        // (reading metalKitView.currentDrawable here is unreliable: after present
+        // it can rotate to a different pooled drawable holding an older frame).
+        KLayoutState.shared.screenshotTexture = nil
+        KLayoutState.shared.screenshotPassActive = true
         metalKitView.setNeedsDisplay()
         metalKitView.draw()
-        
-        guard let drawable = metalKitView.currentDrawable else { return nil }
-        return captureDrawableTexture(drawable.texture)
+        KLayoutState.shared.screenshotPassActive = false
+
+        let capturedTexture = KLayoutState.shared.screenshotTexture
+            ?? metalKitView.currentDrawable?.texture
+        KLayoutState.shared.screenshotTexture = nil
+
+        guard let capturedTexture else {
+            metalKitView.setNeedsDisplay()
+            return nil
+        }
+        let image = captureDrawableTexture(capturedTexture)
+        // Restore the live on-screen view (menu/HUD per normal state).
+        metalKitView.setNeedsDisplay()
+        return image
     }
     
     private func captureDrawableTexture(_ texture: MTLTexture) -> UIImage? {
