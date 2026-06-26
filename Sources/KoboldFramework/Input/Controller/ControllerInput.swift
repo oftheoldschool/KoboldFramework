@@ -18,7 +18,7 @@ public class KControllerInput: ObservableObject {
     /// physical controller can still be activated normally. Defaults to false on a
     /// Mac Catalyst / "iPad app on Mac", where a keyboard/mouse is expected.
     /// Toggle at runtime via `KInputSystem.setVirtualControllerAllowed`.
-    public var allowVirtualController: Bool = !ProcessInfo.processInfo.isMacCatalystApp
+    public var allowVirtualController: Bool = false
 
     /// A real (non-virtual) controller is connected.
     public var hasPhysicalController: Bool {
@@ -147,6 +147,12 @@ public class KControllerInput: ObservableObject {
                     } else {
                         kinfo("Successfully connected virtual controller")
                         self.virtualControllerConnectAttempts = 0
+                        DispatchQueue.main.async { [weak self] in
+                            guard let self else { return }
+                            if self.activeController?.isVirtual ?? false {
+                                self.enableVirtualControllerView()
+                            }
+                        }
                     }
                 }
                 virtualController = newVirtualController
@@ -364,6 +370,14 @@ public class KControllerInput: ObservableObject {
         self.activeController = nil
     }
 
+    private func enqueueButtonEvent(_ button: KControllerEventButtonType, pressed: Bool) {
+        let event = KEvent.input(.controller(.button(KControllerEventButton(
+            button: button,
+            state: pressed ? .pressed : .released
+        ))))
+        eventQueue.enqueue(item: event)
+    }
+
     private func setupControllerHandlers(_ controller: KController) {
         guard
             let gcController = controller.gcController,
@@ -374,35 +388,27 @@ public class KControllerInput: ObservableObject {
         }
 
         gamepad.buttonA.valueChangedHandler = { [weak self] button, value, pressed in
-            let event = KEvent.input(.controller(.button(KControllerEventButton(
-                button: .buttonA,
-                state: pressed ? .pressed : .released
-            ))))
-            self?.eventQueue.enqueue(item: event)
+            self?.enqueueButtonEvent(.buttonA, pressed: pressed)
         }
 
         gamepad.buttonB.valueChangedHandler = { [weak self] button, value, pressed in
-            let event = KEvent.input(.controller(.button(KControllerEventButton(
-                button: .buttonB,
-                state: pressed ? .pressed : .released
-            ))))
-            self?.eventQueue.enqueue(item: event)
+            self?.enqueueButtonEvent(.buttonB, pressed: pressed)
         }
 
         gamepad.buttonX.valueChangedHandler = { [weak self] button, value, pressed in
-            let event = KEvent.input(.controller(.button(KControllerEventButton(
-                button: .buttonX,
-                state: pressed ? .pressed : .released
-            ))))
-            self?.eventQueue.enqueue(item: event)
+            self?.enqueueButtonEvent(.buttonX, pressed: pressed)
         }
 
         gamepad.buttonY.valueChangedHandler = { [weak self] button, value, pressed in
-            let event = KEvent.input(.controller(.button(KControllerEventButton(
-                button: .buttonY,
-                state: pressed ? .pressed : .released
-            ))))
-            self?.eventQueue.enqueue(item: event)
+            self?.enqueueButtonEvent(.buttonY, pressed: pressed)
+        }
+
+        gamepad.buttonMenu.valueChangedHandler = { [weak self] button, value, pressed in
+            self?.enqueueButtonEvent(.buttonStart, pressed: pressed)
+        }
+
+        gamepad.buttonOptions?.valueChangedHandler = { [weak self] button, value, pressed in
+            self?.enqueueButtonEvent(.buttonStart, pressed: pressed)
         }
 
         var leftStickActive = false
@@ -460,16 +466,19 @@ public class KControllerInput: ObservableObject {
         gamepad.buttonB.valueChangedHandler = nil
         gamepad.buttonX.valueChangedHandler = nil
         gamepad.buttonY.valueChangedHandler = nil
+        gamepad.buttonMenu.valueChangedHandler = nil
+        gamepad.buttonOptions?.valueChangedHandler = nil
 
         gamepad.leftThumbstick.valueChangedHandler = nil
         gamepad.rightThumbstick.valueChangedHandler = nil
     }
 
-    private func enableVirtualControllerView() {
+    private func enableVirtualControllerView(retriesRemaining: Int = 8) {
         kinfo("Enabling Virtual Controller View")
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
             if let window = self.activeWindow() {
-                func enableControllerView(from view: UIView) {
+                func enableControllerView(from view: UIView) -> Bool {
                     if String(describing: type(of: view)) == "GCControllerView" {
                         kinfo("Enabling GCView")
                         view.isUserInteractionEnabled = true
@@ -480,13 +489,24 @@ public class KControllerInput: ObservableObject {
                         } else {
                             view.alpha = 1
                         }
-                        return
+                        return true
                     }
                     for subview in view.subviews {
-                        enableControllerView(from: subview)
+                        if enableControllerView(from: subview) {
+                            return true
+                        }
                     }
+                    return false
                 }
-                enableControllerView(from: window)
+                if enableControllerView(from: window) {
+                    return
+                }
+            }
+
+            if retriesRemaining > 0, self.allowVirtualController, self.activeController?.isVirtual ?? false {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                    self?.enableVirtualControllerView(retriesRemaining: retriesRemaining - 1)
+                }
             }
         }
     }
