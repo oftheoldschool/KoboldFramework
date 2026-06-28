@@ -20,6 +20,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         if let sizes = windowScene.sizeRestrictions {
             sizes.allowsFullScreen = configuration.windowControls.allowsFullScreen
+            if let preferredWindowSize = configuration.preferredWindowSize {
+                sizes.minimumSize = preferredWindowSize.cgSize
+                sizes.maximumSize = preferredWindowSize.cgSize
+            } else {
+                sizes.minimumSize = CGSize(width: 0, height: 0)
+                sizes.maximumSize = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            }
         }
         if let windowingBehaviors = windowScene.windowingBehaviors {
             windowingBehaviors.isClosable = configuration.windowControls.showsCloseButton
@@ -31,7 +38,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidBecomeActive(_ scene: UIScene) {
 #if targetEnvironment(macCatalyst)
-        guard let windowScene = scene as? UIWindowScene else { return }
+        guard scene is UIWindowScene else { return }
         DispatchQueue.main.async { [weak self] in
             guard self != nil else { return }
             KLayoutState.shared.updateTopPadding()

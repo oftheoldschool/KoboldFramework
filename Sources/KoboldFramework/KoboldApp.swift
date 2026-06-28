@@ -35,8 +35,22 @@ public struct KMacCatalystContentPadding: Sendable {
     }
 }
 
+public struct KWindowSize: Sendable {
+    public var width: CGFloat
+    public var height: CGFloat
+
+    public init(width: CGFloat, height: CGFloat) {
+        self.width = width
+        self.height = height
+    }
+
+    var cgSize: CGSize {
+        CGSize(width: width, height: height)
+    }
+}
+
 public struct KMacCatalystConfiguration: Sendable {
-    public var preferredWindowSize: CGSize
+    public var preferredWindowSize: KWindowSize?
     public var removesTitleBar: Bool
     public var windowControls: KMacCatalystWindowControls
     public var windowedTopPadding: CGFloat
@@ -44,7 +58,7 @@ public struct KMacCatalystConfiguration: Sendable {
     public var additionalContentPadding: KMacCatalystContentPadding
 
     public init(
-        preferredWindowSize: CGSize = CGSize(width: 1024, height: 768),
+        preferredWindowSize: KWindowSize? = nil,
         removesTitleBar: Bool = true,
         windowControls: KMacCatalystWindowControls = KMacCatalystWindowControls(),
         windowedTopPadding: CGFloat? = nil,
@@ -203,9 +217,12 @@ open class KoboldApp: NSObject {
             settingsView: getSettingsView(),
             preventScreenSleep: preventScreenSleep,
             loadingScreenFadeTimeSeconds: loadingScreenFadeTimeSeconds,
-            macCatalystGuaranteedAspectRatio: macCatalystConfiguration.additionalContentPadding.guaranteeAspectRatio
-                ? macCatalystConfiguration.preferredWindowSize.width / max(macCatalystConfiguration.preferredWindowSize.height, 1)
-                : nil,
+            macCatalystGuaranteedAspectRatio: {
+                guard macCatalystConfiguration.additionalContentPadding.guaranteeAspectRatio,
+                      let preferredWindowSize = macCatalystConfiguration.preferredWindowSize
+                else { return nil }
+                return preferredWindowSize.width / max(preferredWindowSize.height, 1)
+            }(),
             macCatalystAdditionalContentPadding: macCatalystConfiguration.additionalContentPadding
         )
         .defaultFont(font: defaultFont)
@@ -218,7 +235,6 @@ open class KoboldApp: NSObject {
         WindowGroup { [self] in
             rootView
         }
-        .defaultSize(macCatalystConfiguration.preferredWindowSize)
         #else
         WindowGroup { [self] in
             rootView

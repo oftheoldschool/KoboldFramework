@@ -98,16 +98,39 @@ public struct KContentView: View {
     @ViewBuilder
     private var contentView: some View {
         if let macCatalystGuaranteedAspectRatio {
-            appView
-                .aspectRatio(macCatalystGuaranteedAspectRatio, contentMode: .fit)
-                .frame(
-                    minWidth: 0,
-                    maxWidth: .infinity,
-                    minHeight: 0,
-                    maxHeight: .infinity,
-                    alignment: .center)
+            GeometryReader { geometry in
+                let fittedSize = fittedContentSize(
+                    in: geometry.size,
+                    aspectRatio: macCatalystGuaranteedAspectRatio)
+
+                appView
+                    .frame(width: fittedSize.width, height: fittedSize.height)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height / 2)
+            }
         } else {
             appView
+        }
+    }
+
+    private func fittedContentSize(
+        in availableSize: CGSize,
+        aspectRatio: CGFloat
+    ) -> CGSize {
+        guard availableSize.width > 0, availableSize.height > 0, aspectRatio > 0 else {
+            return .zero
+        }
+
+        let availableAspectRatio = availableSize.width / availableSize.height
+        if availableAspectRatio > aspectRatio {
+            return CGSize(
+                width: availableSize.height * aspectRatio,
+                height: availableSize.height)
+        } else {
+            return CGSize(
+                width: availableSize.width,
+                height: availableSize.width / aspectRatio)
         }
     }
 
