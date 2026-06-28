@@ -1,5 +1,74 @@
 import SwiftUI
 
+public struct KMacCatalystWindowControls: Sendable {
+    public var showsCloseButton: Bool
+    public var showsMinimizeButton: Bool
+    public var allowsFullScreen: Bool
+
+    public init(
+        showsCloseButton: Bool = true,
+        showsMinimizeButton: Bool = true,
+        allowsFullScreen: Bool = true
+    ) {
+        self.showsCloseButton = showsCloseButton
+        self.showsMinimizeButton = showsMinimizeButton
+        self.allowsFullScreen = allowsFullScreen
+    }
+}
+
+public struct KMacCatalystContentPadding: Sendable {
+    public var top: CGFloat
+    public var bottom: CGFloat
+    public var backgroundColor: (r: Float, g: Float, b: Float)?
+
+    public init(
+        top: CGFloat = 0,
+        bottom: CGFloat = 0,
+        backgroundColor: (r: Float, g: Float, b: Float)? = nil
+    ) {
+        self.top = top
+        self.bottom = bottom
+        self.backgroundColor = backgroundColor
+    }
+}
+
+public struct KMacCatalystConfiguration: Sendable {
+    public var preferredWindowSize: CGSize
+    public var removesTitleBar: Bool
+    public var windowControls: KMacCatalystWindowControls
+    public var windowedTopPadding: CGFloat
+    public var fullScreenTopPadding: CGFloat
+    public var additionalContentPadding: KMacCatalystContentPadding
+
+    public init(
+        preferredWindowSize: CGSize = CGSize(width: 1024, height: 768),
+        removesTitleBar: Bool = true,
+        windowControls: KMacCatalystWindowControls = KMacCatalystWindowControls(),
+        windowedTopPadding: CGFloat? = nil,
+        fullScreenTopPadding: CGFloat = 16,
+        additionalContentPadding: KMacCatalystContentPadding = KMacCatalystContentPadding()
+    ) {
+        self.preferredWindowSize = preferredWindowSize
+        self.removesTitleBar = removesTitleBar
+        self.windowControls = windowControls
+
+        let resolvedWindowedTopPadding: CGFloat
+        if let windowedTopPadding {
+            resolvedWindowedTopPadding = windowedTopPadding
+        } else {
+            let showsTrafficLightArea =
+                windowControls.showsCloseButton ||
+                windowControls.showsMinimizeButton ||
+                windowControls.allowsFullScreen
+            resolvedWindowedTopPadding = showsTrafficLightArea ? 44 : 16
+        }
+
+        self.windowedTopPadding = resolvedWindowedTopPadding
+        self.fullScreenTopPadding = fullScreenTopPadding
+        self.additionalContentPadding = additionalContentPadding
+    }
+}
+
 open class KoboldApp: NSObject {
     @UIApplicationDelegateAdaptor
     public var sysLink: KSysLink
@@ -31,6 +100,7 @@ open class KoboldApp: NSObject {
     open var preventScreenSleep: Bool { false }
     open var defaultFont: Font? { nil }
     open var colorScheme: ColorScheme? { nil }
+    open var macCatalystConfiguration: KMacCatalystConfiguration { KMacCatalystConfiguration() }
 
     // loading screen config
     open var forceLoadingTimeSeconds: TimeInterval { 3 }
@@ -51,13 +121,18 @@ open class KoboldApp: NSObject {
 
     public override required init() {
         super.init()
+#if targetEnvironment(macCatalyst)
+        SceneDelegate.configuration = macCatalystConfiguration
+#endif
         KLayoutState.shared.update(
             showFPSToggle: showFPS,
             showAppMemoryToggle: showAppMemory,
             showGPUMemoryToggle: showGPUMemory,
             showVersionToggle: showVersion,
             showScreenshotButton: showScreenshotButton,
-            showSettingsButton: showSettingsButton
+            showSettingsButton: showSettingsButton,
+            macCatalystWindowedTopPadding: macCatalystConfiguration.windowedTopPadding,
+            macCatalystFullScreenTopPadding: macCatalystConfiguration.fullScreenTopPadding
         )
 
         DispatchQueue.global(qos: .userInitiated).async { [self] in
@@ -105,29 +180,43 @@ open class KoboldApp: NSObject {
         return nil
     }
 
+    @ViewBuilder
+    private var rootView: some View {
+        KContentView(
+            sysLink: sysLink,
+            appName: appName,
+            showVersion: showVersion,
+            showFPS: showFPS,
+            showScreenshotButton: showScreenshotButton,
+            showSettings: showSettings,
+            showSettingsButton: showSettingsButton,
+            settingsTitle: settingsTitle,
+            showSettingsTitle: showSettingsTitle,
+            settingsDimissbuttonTitle: settingsDimissButtonTitle,
+            showSettingsDismissButton: showSettingsDismissButton,
+            settingsStyle: settingsStyle,
+            settingsDeviceStyleOverrides: settingsDeviceStyleOverrides,
+            loadingView: getLoadingView(),
+            settingsView: getSettingsView(),
+            preventScreenSleep: preventScreenSleep,
+            loadingScreenFadeTimeSeconds: loadingScreenFadeTimeSeconds,
+            macCatalystAdditionalContentPadding: macCatalystConfiguration.additionalContentPadding
+        )
+        .defaultFont(font: defaultFont)
+        .overrideColorScheme(colorScheme: colorScheme)
+    }
+
+    @SceneBuilder
     open var body: some Scene {
+        #if targetEnvironment(macCatalyst)
         WindowGroup { [self] in
-            KContentView(
-                sysLink: sysLink,
-                appName: appName,
-                showVersion: showVersion,
-                showFPS: showFPS,
-                showScreenshotButton: showScreenshotButton,
-                showSettings: showSettings,
-                showSettingsButton: showSettingsButton,
-                settingsTitle: settingsTitle,
-                showSettingsTitle: showSettingsTitle,
-                settingsDimissbuttonTitle: settingsDimissButtonTitle,
-                showSettingsDismissButton: showSettingsDismissButton,
-                settingsStyle: settingsStyle,
-                settingsDeviceStyleOverrides: settingsDeviceStyleOverrides,
-                loadingView: getLoadingView(),
-                settingsView: getSettingsView(),
-                preventScreenSleep: preventScreenSleep,
-                loadingScreenFadeTimeSeconds: loadingScreenFadeTimeSeconds
-            )
-            .defaultFont(font: defaultFont)
-            .overrideColorScheme(colorScheme: colorScheme)
+            rootView
         }
+        .defaultSize(macCatalystConfiguration.preferredWindowSize)
+        #else
+        WindowGroup { [self] in
+            rootView
+        }
+        #endif
     }
 }

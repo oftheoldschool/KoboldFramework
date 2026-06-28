@@ -21,6 +21,7 @@ public struct KContentView: View {
     let loadingView: (any View)?
     let preventScreenSleep: Bool
     let loadingScreenFadeTimeSeconds: TimeInterval
+    let macCatalystAdditionalContentPadding: KMacCatalystContentPadding
 
     public init(
         sysLink: KSysLink,
@@ -39,7 +40,8 @@ public struct KContentView: View {
         loadingView: (any View)? = nil,
         settingsView: (any View)? = nil,
         preventScreenSleep: Bool = false,
-        loadingScreenFadeTimeSeconds: TimeInterval
+        loadingScreenFadeTimeSeconds: TimeInterval,
+        macCatalystAdditionalContentPadding: KMacCatalystContentPadding = KMacCatalystContentPadding()
     ) {
         self.appName = appName
         self.sysLink = sysLink
@@ -55,10 +57,17 @@ public struct KContentView: View {
         self.loadingView = loadingView
         self.preventScreenSleep = preventScreenSleep
         self.loadingScreenFadeTimeSeconds = loadingScreenFadeTimeSeconds
+        self.macCatalystAdditionalContentPadding = macCatalystAdditionalContentPadding
     }
 
     public var body: some View {
-        appView.edgesIgnoringSafeArea(.all)
+        ZStack {
+            backgroundColor
+            appView
+                .padding(.top, macCatalystAdditionalContentPadding.top)
+                .padding(.bottom, macCatalystAdditionalContentPadding.bottom)
+        }
+        .edgesIgnoringSafeArea(.all)
             .statusBar(hidden: true)
             .navigationBarHidden(true)
             .environmentObject(screenshotManager)
@@ -81,6 +90,16 @@ public struct KContentView: View {
                     }
                 }
             }
+    }
+
+    private var backgroundColor: Color {
+        let resolvedColor = macCatalystAdditionalContentPadding.backgroundColor
+            ?? sysLink.clearColor
+        return Color(
+            red: Double(resolvedColor.r),
+            green: Double(resolvedColor.g),
+            blue: Double(resolvedColor.b)
+        )
     }
 
     @ViewBuilder
