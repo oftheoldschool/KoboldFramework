@@ -20,15 +20,18 @@ public struct KMacCatalystContentPadding: Sendable {
     public var top: CGFloat
     public var bottom: CGFloat
     public var backgroundColor: (r: Float, g: Float, b: Float)?
+    public var guaranteeAspectRatio: Bool
 
     public init(
         top: CGFloat = 0,
         bottom: CGFloat = 0,
-        backgroundColor: (r: Float, g: Float, b: Float)? = nil
+        backgroundColor: (r: Float, g: Float, b: Float)? = nil,
+        guaranteeAspectRatio: Bool = false
     ) {
         self.top = top
         self.bottom = bottom
         self.backgroundColor = backgroundColor
+        self.guaranteeAspectRatio = guaranteeAspectRatio
     }
 }
 
@@ -200,6 +203,9 @@ open class KoboldApp: NSObject {
             settingsView: getSettingsView(),
             preventScreenSleep: preventScreenSleep,
             loadingScreenFadeTimeSeconds: loadingScreenFadeTimeSeconds,
+            macCatalystGuaranteedAspectRatio: macCatalystConfiguration.additionalContentPadding.guaranteeAspectRatio
+                ? macCatalystConfiguration.preferredWindowSize.width / max(macCatalystConfiguration.preferredWindowSize.height, 1)
+                : nil,
             macCatalystAdditionalContentPadding: macCatalystConfiguration.additionalContentPadding
         )
         .defaultFont(font: defaultFont)

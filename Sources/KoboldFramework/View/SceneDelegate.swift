@@ -20,14 +20,22 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
         if let sizes = windowScene.sizeRestrictions {
             sizes.allowsFullScreen = configuration.windowControls.allowsFullScreen
-//            sizes.minimumSize = windowScene.screen.bounds.size
-//            sizes.maximumSize = windowScene.screen.bounds.size
         }
         if let windowingBehaviors = windowScene.windowingBehaviors {
             windowingBehaviors.isClosable = configuration.windowControls.showsCloseButton
             windowingBehaviors.isMiniaturizable = configuration.windowControls.showsMinimizeButton
         }
         KLayoutState.shared.updateTopPadding()
+#endif
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+#if targetEnvironment(macCatalyst)
+        guard let windowScene = scene as? UIWindowScene else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard self != nil else { return }
+            KLayoutState.shared.updateTopPadding()
+        }
 #endif
     }
 

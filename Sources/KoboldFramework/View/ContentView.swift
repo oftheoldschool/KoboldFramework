@@ -21,6 +21,7 @@ public struct KContentView: View {
     let loadingView: (any View)?
     let preventScreenSleep: Bool
     let loadingScreenFadeTimeSeconds: TimeInterval
+    let macCatalystGuaranteedAspectRatio: CGFloat?
     let macCatalystAdditionalContentPadding: KMacCatalystContentPadding
 
     public init(
@@ -41,6 +42,7 @@ public struct KContentView: View {
         settingsView: (any View)? = nil,
         preventScreenSleep: Bool = false,
         loadingScreenFadeTimeSeconds: TimeInterval,
+        macCatalystGuaranteedAspectRatio: CGFloat? = nil,
         macCatalystAdditionalContentPadding: KMacCatalystContentPadding = KMacCatalystContentPadding()
     ) {
         self.appName = appName
@@ -57,13 +59,14 @@ public struct KContentView: View {
         self.loadingView = loadingView
         self.preventScreenSleep = preventScreenSleep
         self.loadingScreenFadeTimeSeconds = loadingScreenFadeTimeSeconds
+        self.macCatalystGuaranteedAspectRatio = macCatalystGuaranteedAspectRatio
         self.macCatalystAdditionalContentPadding = macCatalystAdditionalContentPadding
     }
 
     public var body: some View {
         ZStack {
             backgroundColor
-            appView
+            contentView
                 .padding(.top, macCatalystAdditionalContentPadding.top)
                 .padding(.bottom, macCatalystAdditionalContentPadding.bottom)
         }
@@ -90,6 +93,22 @@ public struct KContentView: View {
                     }
                 }
             }
+    }
+
+    @ViewBuilder
+    private var contentView: some View {
+        if let macCatalystGuaranteedAspectRatio {
+            appView
+                .aspectRatio(macCatalystGuaranteedAspectRatio, contentMode: .fit)
+                .frame(
+                    minWidth: 0,
+                    maxWidth: .infinity,
+                    minHeight: 0,
+                    maxHeight: .infinity,
+                    alignment: .center)
+        } else {
+            appView
+        }
     }
 
     private var backgroundColor: Color {
