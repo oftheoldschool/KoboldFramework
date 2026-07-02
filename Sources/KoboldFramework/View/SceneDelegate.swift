@@ -12,11 +12,42 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 #if targetEnvironment(macCatalyst)
+        Self.applyMacCatalystConfiguration(to: windowScene)
+        DispatchQueue.main.async {
+            Self.applyMacCatalystConfiguration(to: windowScene)
+        }
+#endif
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+#if targetEnvironment(macCatalyst)
+        guard let windowScene = scene as? UIWindowScene else { return }
+        DispatchQueue.main.async {
+            Self.applyMacCatalystConfiguration(to: windowScene)
+        }
+#endif
+    }
+
+    func windowScene(
+        _ windowScene: UIWindowScene,
+        didUpdate previousCoordinateSpace: any UICoordinateSpace,
+        interfaceOrientation previousInterfaceOrientation: UIInterfaceOrientation,
+        traitCollection previousTraitCollection: UITraitCollection
+    ) {
+#if targetEnvironment(macCatalyst)
+        Self.applyMacCatalystConfiguration(to: windowScene)
+#endif
+    }
+
+#if targetEnvironment(macCatalyst)
+    private static func applyMacCatalystConfiguration(to windowScene: UIWindowScene) {
         let configuration = Self.configuration
-        if configuration.removesTitleBar,
-           let titleBar = windowScene.titlebar {
-            titleBar.titleVisibility = .hidden
-            titleBar.toolbar = nil
+        if configuration.removesTitleBar {
+            windowScene.title = ""
+            if let titleBar = windowScene.titlebar {
+                titleBar.titleVisibility = .hidden
+                titleBar.toolbar = nil
+            }
         }
         if let sizes = windowScene.sizeRestrictions {
             sizes.allowsFullScreen = configuration.windowControls.allowsFullScreen
@@ -33,27 +64,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             windowingBehaviors.isMiniaturizable = configuration.windowControls.showsMinimizeButton
         }
         KLayoutState.shared.updateTopPadding()
-#endif
     }
-
-    func sceneDidBecomeActive(_ scene: UIScene) {
-#if targetEnvironment(macCatalyst)
-        guard scene is UIWindowScene else { return }
-        DispatchQueue.main.async { [weak self] in
-            guard self != nil else { return }
-            KLayoutState.shared.updateTopPadding()
-        }
 #endif
-    }
-
-    func windowScene(
-        _ windowScene: UIWindowScene,
-        didUpdate previousCoordinateSpace: any UICoordinateSpace,
-        interfaceOrientation previousInterfaceOrientation: UIInterfaceOrientation,
-        traitCollection previousTraitCollection: UITraitCollection
-    ) {
-#if targetEnvironment(macCatalyst)
-        KLayoutState.shared.updateTopPadding()
-#endif
-    }
 }

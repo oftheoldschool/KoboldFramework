@@ -86,10 +86,25 @@ public struct KMacCatalystConfiguration: Sendable {
     }
 }
 
+public struct KoboldAppLauncher<AppType: KoboldApp>: App {
+    private let koboldApp = AppType()
+
+    public init() {
+    }
+
+    public var body: some Scene {
+        koboldApp.body
+    }
+}
+
 open class KoboldApp: NSObject {
     @UIApplicationDelegateAdaptor
     public var sysLink: KSysLink
     private(set) public var frameHandler: KFrameHandler?
+
+    open class func main() {
+        KoboldAppLauncher<Self>.main()
+    }
 
     open var appName: String { "Kobold Framework Demo" }
     open var showVersion: Bool { false }
